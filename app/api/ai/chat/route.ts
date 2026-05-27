@@ -53,7 +53,7 @@ export async function POST(req: Request) {
       .order("created_at", { ascending: true })
       .limit(10);
 
-    const contextMessages = history?.map(m => ({
+    const contextMessages: any[] = history?.map(m => ({
       role: m.role,
       content: m.content
     })) || [];
