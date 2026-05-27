@@ -158,3 +158,31 @@ CREATE POLICY "Authenticated users can view logs"
 CREATE POLICY "Authenticated users can insert logs"
   ON public.mcdlogs_activities FOR INSERT
   WITH CHECK (auth.role() = 'authenticated');
+
+
+-- =====================================================
+-- 6. FEEDBACKS - Bug & Suggestions Reports
+-- =====================================================
+CREATE TABLE public.feedbacks (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  user_email  TEXT,                                                  -- Email pelapor (opsional)
+  type        TEXT NOT NULL CHECK (type IN ('bug', 'saran')),       -- Klasifikasi laporan
+  priority    TEXT NOT NULL DEFAULT 'normal' CHECK (priority IN ('rendah', 'normal', 'tinggi')), -- Prioritas laporan
+  description TEXT NOT NULL,                                        -- Rincian laporan dari pengguna
+  device_info JSONB,                                                -- Metadata perangkat (OS, Brand HP, dll)
+  app_version TEXT,                                                 -- Versi aplikasi McdWallet
+  error_log   TEXT,                                                 -- Berkas log error otomatis jika tipe = bug
+  status      TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'resolved')) -- Status penanganan
+);
+
+-- RLS: Hanya siapa pun yang bisa input laporan (public INSERT), tapi hanya authenticated admin yang bisa ALL (read/modify)
+ALTER TABLE public.feedbacks ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public insert feedback"
+  ON public.feedbacks FOR INSERT
+  WITH CHECK (true);
+
+CREATE POLICY "Allow authenticated users full access to feedback"
+  ON public.feedbacks FOR ALL
+  USING (auth.role() = 'authenticated');

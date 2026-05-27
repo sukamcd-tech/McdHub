@@ -6,6 +6,7 @@ import {
   LayoutGrid, 
   Folder, 
   MessageSquare, 
+  MessageSquarePlus,
   Rocket, 
   UploadCloud, 
   FileText, 
@@ -23,6 +24,7 @@ const sidebarItems = [
   { name: "Projects", href: "/admin/projects", icon: Rocket },
   { name: "Backup", href: "/admin/backup", icon: UploadCloud },
   { name: "Logs", href: "/admin/logs", icon: FileText },
+  { name: "Feedback", href: "/admin/feedback", icon: MessageSquarePlus },
   { name: "Security", href: "/admin/security", icon: ShieldCheck },
   { name: "Profile", href: "/admin/profile", icon: User },
 ];
