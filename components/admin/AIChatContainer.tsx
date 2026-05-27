@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { MessageSquare, Plus, Trash2, Send, Zap, Bot, User, Loader2, Settings, X, Save, AlertTriangle } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { deleteConversation, getMessages, updateAISettings } from "@/lib/actions/ai-actions";
 import { useRouter } from "next/navigation";
+import { Zap, Mic, MicOff, Volume2, VolumeX, Bot, User, Loader2, Settings, X, Save, AlertTriangle, MessageSquare, Plus, Trash2, Send } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import McdAIOrb from "./mcdai/McdAIOrb";
+import McdAIBrowser from "./mcdai/McdAIBrowser";
+import { useMcdAIVoice } from "@/hooks/use-mcdai-voice";
 
 interface Conversation {
   id: string;
@@ -40,8 +43,33 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
   const [persona, setPersona] = useState(profile?.ai_settings?.persona || "");
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   
+  // Browser State
+  const [browserUrl, setBrowserUrl] = useState<string | null>(null);
+  const [isBrowserOpen, setIsBrowserOpen] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Voice Hook (Safe Restore)
+  const { isListening, transcript, startListening, stopListening, speak } = useMcdAIVoice();
+  const [isMuted, setIsMuted] = useState(false);
+  const [aiStatus, setAiStatus] = useState<"idle" | "thinking" | "speaking" | "listening">("idle");
+
+  // Sync transcript to input
+  useEffect(() => {
+    if (transcript) {
+      setInputValue(transcript);
+    }
+  }, [transcript]);
+
+  // Handle Voice Toggle
+  const toggleListening = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -102,6 +130,7 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
     setIsTyping(true);
 
     try {
+      setAiStatus("thinking");
       const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -117,7 +146,6 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
       if (data.success) {
         if (!currentConvId) {
           setCurrentConvId(data.conversationId);
-          // Refresh conversations list
           setConversations(prev => [{ id: data.conversationId, title: userMessage.substring(0, 30) + "...", created_at: new Date().toISOString() }, ...prev]);
         }
         
@@ -128,11 +156,32 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
           created_at: new Date().toISOString()
         };
         setMessages(prev => [...prev, aiMsg]);
+
+        // Handle Client-side Actions (Internal Browser, etc.)
+        if (data.actions && Array.isArray(data.actions)) {
+          data.actions.forEach((action: any) => {
+            if (action.type === "open_url" && action.url) {
+              setBrowserUrl(action.url);
+              setIsBrowserOpen(true);
+            }
+          });
+        }
+
+        // Speak response if not muted
+        if (!isMuted) {
+          setAiStatus("speaking");
+          speak(data.message.replace(/[*#`]/g, '')); // Clean markdown for speech
+          // Speaking state will naturally end after some time or we can approximate
+          setTimeout(() => setAiStatus("idle"), data.message.length * 50); 
+        } else {
+          setAiStatus("idle");
+        }
       } else {
         throw new Error(data.error);
       }
     } catch (err: any) {
       console.error("Chat error:", err);
+      setAiStatus("idle");
       const errMsg: Message = {
         id: Date.now().toString() + "-error",
         role: "assistant",
@@ -215,6 +264,12 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
           </h3>
           <div className="flex items-center gap-1">
             <button 
+              onClick={() => setIsMuted(!isMuted)}
+              className={`p-2 rounded-xl transition-all border border-transparent hover:border-zinc-800 ${isMuted ? "text-red-500" : "text-zinc-500 hover:text-white"}`}
+            >
+              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+            <button 
               onClick={() => setIsSettingsOpen(true)}
               className="p-2 hover:bg-zinc-900 rounded-xl transition-all text-zinc-500 hover:text-white border border-transparent hover:border-zinc-800"
             >
@@ -265,21 +320,22 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
         <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar relative">
           {messages.length === 0 && !isLoading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center">
-              <div className="w-20 h-20 bg-zinc-900 rounded-[2.5rem] flex items-center justify-center mb-8 border border-zinc-800 shadow-2xl">
-                <Bot className="w-10 h-10 text-white" />
+              <div className="mb-8">
+                <McdAIOrb status={isListening ? "listening" : aiStatus} />
               </div>
-              <h2 className="text-3xl font-black tracking-tighter text-white mb-2 italic uppercase">McdAI Intelligence</h2>
-              <p className="text-zinc-500 max-w-sm text-sm font-light leading-relaxed">
-                Tanyakan apa saja tentang administrasi SukaMCD, bantuan koding, atau optimasi sistem. Saya di sini untuk membantu.
+              <h2 className="text-3xl font-black tracking-tighter text-white mb-2 italic uppercase">Intelligence Core</h2>
+              <p className="text-zinc-500 max-w-sm text-[10px] font-black uppercase tracking-[0.3em] leading-relaxed opacity-50">
+                SukaMCD Administrative Personal Assistant
               </p>
-              <div className="mt-10 grid grid-cols-2 gap-3 w-full max-w-md">
-                {["Optimasi Database", "Security Audit", "API Integration", "UI/UX Polishing"].map(topic => (
+              <div className="mt-12 grid grid-cols-2 gap-3 w-full max-w-md">
+                {["Check System Logs", "Security Briefing", "Backup Status", "AI Optimization"].map(topic => (
                   <button 
                     key={topic}
                     onClick={() => { setInputValue(`Bantu saya dengan: ${topic}`); }}
-                    className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white hover:border-zinc-600 transition-all text-left"
+                    className="p-4 rounded-2xl bg-zinc-900/40 border border-zinc-800/50 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white hover:border-emerald-500/30 transition-all text-left group flex items-center justify-between"
                   >
                     {topic}
+                    <Zap className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500" />
                   </button>
                 ))}
               </div>
@@ -380,6 +436,16 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
                   style={{ height: 'auto' }}
                 />
                 <button 
+                  onClick={toggleListening}
+                  className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all border ${
+                    isListening 
+                      ? "bg-red-500/10 border-red-500 text-red-500 animate-pulse" 
+                      : "bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-white hover:border-zinc-700"
+                  }`}
+                >
+                  {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                </button>
+                <button 
                   onClick={handleSend}
                   disabled={!inputValue.trim() || isLoading || isTyping}
                   className="w-10 h-10 bg-white text-black rounded-2xl flex items-center justify-center hover:bg-zinc-200 transition-all shadow-xl disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
@@ -425,6 +491,13 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
           </div>
         </div>
       )}
+
+      {/* Internal Browser Overlay */}
+      <McdAIBrowser 
+        url={browserUrl}
+        isOpen={isBrowserOpen}
+        onClose={() => setIsBrowserOpen(false)}
+      />
     </div>
   );
 }
