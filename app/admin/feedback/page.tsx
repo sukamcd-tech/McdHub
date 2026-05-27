@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase";
+import { createMobileClient } from "@/lib/supabase";
 import { 
   MessageSquare, 
   Bug, 
@@ -39,7 +39,7 @@ interface Feedback {
 }
 
 export default function FeedbackPage() {
-  const supabase = createClient();
+  const supabase = createMobileClient();
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -94,6 +94,23 @@ export default function FeedbackPage() {
       );
     } catch (err) {
       console.error("Error resolving feedback:", err);
+    }
+  };
+
+  const handlePriorityChange = async (id: string, newPriority: "rendah" | "normal" | "tinggi") => {
+    try {
+      const { error } = await supabase
+        .from("feedbacks")
+        .update({ priority: newPriority })
+        .eq("id", id);
+
+      if (error) throw error;
+      
+      setFeedbacks(prev => 
+        prev.map(f => f.id === id ? { ...f, priority: newPriority } : f)
+      );
+    } catch (err) {
+      console.error("Error updating priority:", err);
     }
   };
 
@@ -279,7 +296,7 @@ export default function FeedbackPage() {
                       : "bg-zinc-950 text-zinc-500 border-zinc-800 hover:text-white hover:border-zinc-700"
                   }`}
                 >
-                  {type === "all" ? "Semua" : type === "bug" ? "🐛 Bug" : "💡 Saran"}
+                  {type === "all" ? "Semua" : type === "bug" ? "Bug" : "Saran"}
                 </button>
               ))}
             </div>
@@ -374,14 +391,20 @@ export default function FeedbackPage() {
 
                   <div className="flex items-center gap-2">
                     <div className="text-right">
-                      <div className="text-[10px] text-zinc-500 font-black uppercase tracking-wider">Tingkat Prioritas</div>
-                      <span className={`inline-block text-[10px] px-3 py-1 rounded-xl font-black uppercase tracking-widest mt-1 ${
-                        selectedFeedback.priority === "tinggi" ? "bg-red-500 text-black font-extrabold shadow-[0_0_12px_rgba(239,68,68,0.4)] animate-pulse" :
-                        selectedFeedback.priority === "normal" ? "bg-amber-500/10 text-amber-400 border border-amber-500/25" :
-                        "bg-zinc-900 text-zinc-500 border border-zinc-800"
-                      }`}>
-                        {selectedFeedback.priority}
-                      </span>
+                      <div className="text-[10px] text-zinc-500 font-black uppercase tracking-wider mb-1">Tingkat Prioritas</div>
+                      <select
+                        value={selectedFeedback.priority}
+                        onChange={(e) => handlePriorityChange(selectedFeedback.id, e.target.value as any)}
+                        className={`text-[10px] px-2.5 py-1 rounded-xl font-black uppercase tracking-widest bg-zinc-950 border cursor-pointer focus:outline-none transition-all ${
+                          selectedFeedback.priority === "tinggi" ? "text-red-500 border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.15)] font-extrabold animate-pulse" :
+                          selectedFeedback.priority === "normal" ? "text-amber-400 border-amber-500/25 font-bold" :
+                          "text-zinc-400 border-zinc-800 font-bold"
+                        }`}
+                      >
+                        <option value="rendah" className="bg-zinc-950 text-zinc-400 font-bold">🟢 RENDAH</option>
+                        <option value="normal" className="bg-zinc-950 text-amber-400 font-bold">🟡 NORMAL</option>
+                        <option value="tinggi" className="bg-zinc-950 text-red-500 font-bold">🔴 TINGGI</option>
+                      </select>
                     </div>
                   </div>
                 </div>
