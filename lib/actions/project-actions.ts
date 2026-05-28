@@ -44,7 +44,6 @@ export async function createProject(projectData: any) {
     { project_id: data?.id, projectData }
   );
 
-  revalidatePath("/");
   revalidatePath("/admin/projects");
   revalidatePath("/admin/dashboard");
   return { success: true };
@@ -73,7 +72,6 @@ export async function updateProject(id: string, projectData: any) {
     { id, changes: projectData }
   );
 
-  revalidatePath("/");
   revalidatePath("/admin/projects");
   revalidatePath("/admin/dashboard");
   return { success: true };
@@ -99,7 +97,6 @@ export async function deleteProject(id: string) {
     { id }
   );
 
-  revalidatePath("/");
   revalidatePath("/admin/projects");
   revalidatePath("/admin/dashboard");
   return { success: true };

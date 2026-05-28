@@ -171,81 +171,58 @@ export default function FeedbackPage() {
   const totalResolved = feedbacks.filter(f => f.status === "resolved").length;
 
   return (
-    <div className="h-full flex flex-col space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-      {/* Title */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <div className="h-px w-8 bg-zinc-800"></div>
-          <p className="text-[10px] text-zinc-500 tracking-[0.3em] uppercase font-bold">Feedback Management</p>
-        </div>
-        <h1 className="text-5xl lg:text-6xl font-black tracking-tighter text-gradient">
-          Masukan & Bug
-        </h1>
-      </div>
+    <div className="h-full flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-1000 overflow-hidden">
 
-      {/* Row 1: Quick Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <div className="glass-panel p-6 rounded-3xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-6 opacity-5">
-            <Bug className="w-16 h-16" />
+      {/* Header: Title (full width) */}
+      <div className="flex-shrink-0 flex items-end justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="h-px w-6 bg-zinc-800"></div>
+            <p className="text-[10px] text-zinc-500 tracking-[0.3em] uppercase font-bold">Feedback Management</p>
           </div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="p-2 rounded-xl bg-red-950/30 border border-red-500/10 text-red-400">
-                <Bug className="w-4 h-4" />
-              </div>
-              <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">Bug Aktif</p>
-            </div>
-            <p className="text-4xl font-light text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.2)]">
-              {totalOpenBug} <span className="text-xs font-bold uppercase text-zinc-500">Laporan</span>
-            </p>
-            <p className="text-[9px] text-zinc-600 mt-2 font-medium uppercase tracking-wider">Perlu penelusuran segera</p>
-          </div>
+          <h1 className="text-4xl lg:text-5xl font-black tracking-tighter text-gradient leading-none">
+            Masukan & Bug
+          </h1>
         </div>
 
-        <div className="glass-panel p-6 rounded-3xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-6 opacity-5">
-            <Lightbulb className="w-16 h-16" />
-          </div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="p-2 rounded-xl bg-emerald-950/30 border border-emerald-500/10 text-emerald-400">
-                <Lightbulb className="w-4 h-4" />
-              </div>
-              <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">Saran Fitur</p>
+        {/* Stat bar — single unified glass panel */}
+        <div className="glass-panel rounded-2xl flex items-stretch divide-x divide-zinc-900 overflow-hidden flex-shrink-0">
+          <div className="flex items-center gap-3 px-5 py-3">
+            <div className="p-1.5 rounded-lg bg-red-950/30 border border-red-500/15 text-red-400">
+              <Bug className="w-3.5 h-3.5" />
             </div>
-            <p className="text-4xl font-light text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.2)]">
-              {totalOpenSaran} <span className="text-xs font-bold uppercase text-zinc-500">Gagasan</span>
-            </p>
-            <p className="text-[9px] text-zinc-600 mt-2 font-medium uppercase tracking-wider">Untuk pengembangan vNext</p>
-          </div>
-        </div>
-
-        <div className="glass-panel p-6 rounded-3xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-6 opacity-5">
-            <CheckCircle2 className="w-16 h-16" />
-          </div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400">
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-              <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">Laporan Selesai</p>
+            <div>
+              <p className="text-[9px] text-zinc-500 uppercase tracking-widest font-black leading-none mb-1">Bug Aktif</p>
+              <p className="text-2xl font-light text-red-500 leading-none">{totalOpenBug}</p>
             </div>
-            <p className="text-4xl font-light text-white">
-              {totalResolved} <span className="text-xs font-bold uppercase text-zinc-600">Diselesaikan</span>
-            </p>
-            <p className="text-[9px] text-zinc-600 mt-2 font-medium uppercase tracking-wider">Telah di-deploy ke produksi</p>
+          </div>
+          <div className="flex items-center gap-3 px-5 py-3">
+            <div className="p-1.5 rounded-lg bg-emerald-950/30 border border-emerald-500/15 text-emerald-400">
+              <Lightbulb className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <p className="text-[9px] text-zinc-500 uppercase tracking-widest font-black leading-none mb-1">Saran Fitur</p>
+              <p className="text-2xl font-light text-emerald-400 leading-none">{totalOpenSaran}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 px-5 py-3">
+            <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <p className="text-[9px] text-zinc-500 uppercase tracking-widest font-black leading-none mb-1">Selesai</p>
+              <p className="text-2xl font-light text-white leading-none">{totalResolved}</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Grid: List & Detail */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-[500px]">
+      {/* Main Grid: fills remaining height, clips overflow at page level */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0 overflow-hidden">
         {/* Left Column: List (5 cols) */}
-        <div className="lg:col-span-5 glass-panel rounded-3xl flex flex-col overflow-hidden">
-          {/* Header Controls */}
-          <div className="p-6 border-b border-zinc-900 space-y-4">
+        <div className="lg:col-span-5 glass-panel rounded-3xl flex flex-col overflow-hidden min-h-0">
+          {/* Header Controls — fixed inside left card */}
+          <div className="p-5 border-b border-zinc-900 space-y-3 flex-shrink-0">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
@@ -254,7 +231,7 @@ export default function FeedbackPage() {
                 placeholder="Cari deskripsi atau email..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-3 pl-11 pr-4 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-2.5 pl-11 pr-4 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
               />
             </div>
 
@@ -262,7 +239,7 @@ export default function FeedbackPage() {
             <div className="flex border-b border-zinc-900 pb-1">
               <button
                 onClick={() => { setFilterStatus("open"); }}
-                className={`flex-1 pb-2.5 text-xs font-bold uppercase tracking-widest transition-colors relative ${
+                className={`flex-1 pb-2 text-xs font-bold uppercase tracking-widest transition-colors relative ${
                   filterStatus === "open" ? "text-white" : "text-zinc-500 hover:text-zinc-300"
                 }`}
               >
@@ -273,7 +250,7 @@ export default function FeedbackPage() {
               </button>
               <button
                 onClick={() => { setFilterStatus("resolved"); }}
-                className={`flex-1 pb-2.5 text-xs font-bold uppercase tracking-widest transition-colors relative ${
+                className={`flex-1 pb-2 text-xs font-bold uppercase tracking-widest transition-colors relative ${
                   filterStatus === "resolved" ? "text-white" : "text-zinc-500 hover:text-zinc-300"
                 }`}
               >
@@ -302,8 +279,8 @@ export default function FeedbackPage() {
             </div>
           </div>
 
-          {/* Feedback List */}
-          <div className="flex-1 overflow-y-auto max-h-[550px] custom-scrollbar p-4 space-y-2">
+          {/* Feedback List — scrollable */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2 min-h-0">
             {loading ? (
               <div className="text-center py-16 text-zinc-500 text-xs font-bold uppercase tracking-widest animate-pulse">
                 Memuat data masukan...
@@ -365,12 +342,12 @@ export default function FeedbackPage() {
           </div>
         </div>
 
-        {/* Right Column: Detail (7 cols) */}
-        <div className="lg:col-span-7 glass-panel rounded-3xl p-8 flex flex-col justify-between overflow-hidden">
+        {/* Right Column: Detail (7 cols) — scrollable */}
+        <div className="lg:col-span-7 glass-panel rounded-3xl flex flex-col overflow-hidden min-h-0">
           {selectedFeedback ? (
-            <div className="h-full flex flex-col justify-between space-y-6">
-              {/* Top Section */}
-              <div className="space-y-6 overflow-y-auto max-h-[600px] pr-2 custom-scrollbar">
+            <div className="flex flex-col h-full min-h-0">
+              {/* Scrollable detail body */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-8 space-y-6 min-h-0">
                 {/* Meta details header */}
                 <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-zinc-900">
                   <div className="flex items-center gap-3">
@@ -494,7 +471,7 @@ export default function FeedbackPage() {
                       )}
                     </div>
                     {selectedFeedback.error_log ? (
-                      <pre className="bg-zinc-950 border border-zinc-900/80 p-4 rounded-xl text-[11px] font-mono text-red-400/90 overflow-x-auto max-h-48 custom-scrollbar text-left leading-relaxed">
+                      <pre className="bg-zinc-950 border border-zinc-900/80 p-4 rounded-xl text-[11px] font-mono text-red-400/90 overflow-x-auto max-h-44 custom-scrollbar text-left leading-relaxed">
                         {selectedFeedback.error_log}
                       </pre>
                     ) : (
@@ -506,11 +483,11 @@ export default function FeedbackPage() {
                 )}
               </div>
 
-              {/* Bottom Actions Row */}
-              <div className="pt-4 border-t border-zinc-900 flex justify-between items-center gap-4">
+              {/* Bottom Actions Row — fixed at bottom of right card */}
+              <div className="flex-shrink-0 px-8 py-4 border-t border-zinc-900 flex justify-between items-center gap-4">
                 <button
                   onClick={() => handleDelete(selectedFeedback.id)}
-                  className="px-5 py-3.5 bg-zinc-950 border border-zinc-900 hover:border-red-950 hover:bg-red-500/5 hover:text-red-400 rounded-2xl text-xs text-zinc-500 transition-all flex items-center gap-2 font-bold uppercase tracking-widest active:scale-95"
+                  className="px-5 py-3 bg-zinc-950 border border-zinc-900 hover:border-red-950 hover:bg-red-500/5 hover:text-red-400 rounded-2xl text-xs text-zinc-500 transition-all flex items-center gap-2 font-bold uppercase tracking-widest active:scale-95"
                 >
                   <Trash2 className="w-4 h-4" /> Hapus Laporan
                 </button>
@@ -518,12 +495,12 @@ export default function FeedbackPage() {
                 {selectedFeedback.status === "open" ? (
                   <button
                     onClick={() => handleResolve(selectedFeedback.id)}
-                    className="px-6 py-3.5 bg-white text-black hover:bg-zinc-200 rounded-2xl text-xs transition-all flex items-center gap-2 font-black uppercase tracking-widest active:scale-95 shadow-lg shadow-white/10"
+                    className="px-6 py-3 bg-white text-black hover:bg-zinc-200 rounded-2xl text-xs transition-all flex items-center gap-2 font-black uppercase tracking-widest active:scale-95 shadow-lg shadow-white/10"
                   >
                     <Check className="w-4 h-4 stroke-[3px]" /> Tandai Selesai
                   </button>
                 ) : (
-                  <span className="px-5 py-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-black uppercase tracking-widest rounded-2xl flex items-center gap-2">
+                  <span className="px-5 py-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-black uppercase tracking-widest rounded-2xl flex items-center gap-2">
                     <Check className="w-4 h-4 stroke-[3px]" /> Laporan Selesai
                   </span>
                 )}
