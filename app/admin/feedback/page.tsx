@@ -2,23 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { createMobileClient } from "@/lib/supabase";
-import { 
-  MessageSquare, 
-  Bug, 
-  Lightbulb, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Search, 
-  Clock, 
-  Smartphone, 
-  Cpu, 
-  Tag, 
-  Check, 
-  Trash2, 
-  Copy, 
-  ExternalLink,
-  ChevronRight,
-  Info
+import {
+  MessageSquare, Bug, Lightbulb, CheckCircle2, AlertTriangle,
+  Search, Clock, Smartphone, Cpu, Tag, Check, Trash2, Copy,
+  ChevronRight, Info
 } from "lucide-react";
 
 interface Feedback {
@@ -28,11 +15,7 @@ interface Feedback {
   type: "bug" | "saran";
   priority: "rendah" | "normal" | "tinggi";
   description: string;
-  device_info: {
-    os?: string;
-    os_version?: string;
-    model?: string;
-  } | null;
+  device_info: { os?: string; os_version?: string; model?: string } | null;
   app_version: string | null;
   error_log: string | null;
   status: "open" | "resolved";
@@ -48,89 +31,38 @@ export default function FeedbackPage() {
   const [filterStatus, setFilterStatus] = useState<"open" | "resolved">("open");
   const [copying, setCopying] = useState(false);
 
-  useEffect(() => {
-    fetchFeedbacks();
-  }, []);
+  useEffect(() => { fetchFeedbacks(); }, []);
 
   const fetchFeedbacks = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("feedbacks")
-        .select("*")
-        .order("created_at", { ascending: false });
-
+      const { data, error } = await supabase.from("feedbacks").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       setFeedbacks(data || []);
-      
-      // Auto-select first item if available
       if (data && data.length > 0) {
-        // Find first item matching active filter
         const openItems = data.filter(f => f.status === "open");
-        if (openItems.length > 0) {
-          setSelectedId(openItems[0].id);
-        } else {
-          setSelectedId(data[0].id);
-        }
+        setSelectedId(openItems.length > 0 ? openItems[0].id : data[0].id);
       }
-    } catch (err) {
-      console.error("Error fetching feedbacks:", err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error("Error fetching feedbacks:", err); }
+    finally { setLoading(false); }
   };
 
   const handleResolve = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from("feedbacks")
-        .update({ status: "resolved" })
-        .eq("id", id);
-
-      if (error) throw error;
-      
-      setFeedbacks(prev => 
-        prev.map(f => f.id === id ? { ...f, status: "resolved" as const } : f)
-      );
-    } catch (err) {
-      console.error("Error resolving feedback:", err);
-    }
+    const { error } = await supabase.from("feedbacks").update({ status: "resolved" }).eq("id", id);
+    if (!error) setFeedbacks(prev => prev.map(f => f.id === id ? { ...f, status: "resolved" as const } : f));
   };
 
   const handlePriorityChange = async (id: string, newPriority: "rendah" | "normal" | "tinggi") => {
-    try {
-      const { error } = await supabase
-        .from("feedbacks")
-        .update({ priority: newPriority })
-        .eq("id", id);
-
-      if (error) throw error;
-      
-      setFeedbacks(prev => 
-        prev.map(f => f.id === id ? { ...f, priority: newPriority } : f)
-      );
-    } catch (err) {
-      console.error("Error updating priority:", err);
-    }
+    const { error } = await supabase.from("feedbacks").update({ priority: newPriority }).eq("id", id);
+    if (!error) setFeedbacks(prev => prev.map(f => f.id === id ? { ...f, priority: newPriority } : f));
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus laporan ini secara permanen?")) return;
-    
-    try {
-      const { error } = await supabase
-        .from("feedbacks")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
-      
+    const { error } = await supabase.from("feedbacks").delete().eq("id", id);
+    if (!error) {
       setFeedbacks(prev => prev.filter(f => f.id !== id));
-      if (selectedId === id) {
-        setSelectedId(null);
-      }
-    } catch (err) {
-      console.error("Error deleting feedback:", err);
+      if (selectedId === id) setSelectedId(null);
     }
   };
 
@@ -140,138 +72,113 @@ export default function FeedbackPage() {
     setTimeout(() => setCopying(false), 2000);
   };
 
-  // Helper untuk urutan prioritas
   const priorityOrder = { tinggi: 0, normal: 1, rendah: 2 };
 
-  // Filter & Urutan Data
   const filteredFeedbacks = feedbacks
     .filter(f => {
-      const matchesSearch = 
+      const matchesSearch =
         (f.description && f.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (f.user_email && f.user_email.toLowerCase().includes(searchTerm.toLowerCase()));
-      
       const matchesType = filterType === "all" || f.type === filterType;
       const matchesStatus = f.status === filterStatus;
-
       return matchesSearch && matchesType && matchesStatus;
     })
     .sort((a, b) => {
-      // Urutkan prioritas tinggi -> normal -> rendah
       const pDiff = (priorityOrder[a.priority] ?? 1) - (priorityOrder[b.priority] ?? 1);
       if (pDiff !== 0) return pDiff;
-      // Jika prioritas sama, urutkan tanggal terbaru
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
 
   const selectedFeedback = feedbacks.find(f => f.id === selectedId);
-
-  // Statistik Ringkasan
   const totalOpenBug = feedbacks.filter(f => f.type === "bug" && f.status === "open").length;
   const totalOpenSaran = feedbacks.filter(f => f.type === "saran" && f.status === "open").length;
   const totalResolved = feedbacks.filter(f => f.status === "resolved").length;
 
   return (
-    <div className="h-full flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-1000 overflow-hidden">
-
-      {/* Header: Title (full width) */}
+    <div className="h-full flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-4 duration-700 overflow-hidden">
+      {/* ── Header ── */}
       <div className="flex-shrink-0 flex items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <div className="h-px w-6 bg-zinc-800"></div>
-            <p className="text-[10px] text-zinc-500 tracking-[0.3em] uppercase font-bold">Feedback Management</p>
-          </div>
-          <h1 className="text-4xl lg:text-5xl font-black tracking-tighter text-gradient leading-none">
+          <p className="text-[9px] uppercase tracking-[0.3em] font-black font-mono mb-1" style={{ color: "var(--silver-600)" }}>
+            Feedback Management
+          </p>
+          <h1 className="text-4xl font-black tracking-tighter leading-none" style={{ color: "var(--silver-100)" }}>
             Masukan & Bug
           </h1>
         </div>
 
-        {/* Stat bar — single unified glass panel */}
-        <div className="glass-panel rounded-2xl flex items-stretch divide-x divide-zinc-900 overflow-hidden flex-shrink-0">
-          <div className="flex items-center gap-3 px-5 py-3">
-            <div className="p-1.5 rounded-lg bg-red-950/30 border border-red-500/15 text-red-400">
-              <Bug className="w-3.5 h-3.5" />
+        {/* Stat Pills */}
+        <div className="flex items-stretch gap-3">
+          {[
+            { icon: Bug, count: totalOpenBug, label: "Bug Aktif", accent: "#ef4444", bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.2)" },
+            { icon: Lightbulb, count: totalOpenSaran, label: "Saran", accent: "#10b981", bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.2)" },
+            { icon: CheckCircle2, count: totalResolved, label: "Selesai", accent: "var(--silver-300)", bg: "var(--bg-elevated)", border: "var(--border-soft)" },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center gap-3 px-5 py-3 rounded-xl" style={{ background: item.bg, border: `1px solid ${item.border}` }}>
+              <item.icon className="w-4 h-4 shrink-0" style={{ color: item.accent }} />
+              <div>
+                <p className="text-[8px] font-black uppercase tracking-widest font-mono leading-none mb-0.5" style={{ color: "var(--silver-600)" }}>
+                  {item.label}
+                </p>
+                <p className="text-2xl font-light leading-none" style={{ color: item.accent }}>{item.count}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-[9px] text-zinc-500 uppercase tracking-widest font-black leading-none mb-1">Bug Aktif</p>
-              <p className="text-2xl font-light text-red-500 leading-none">{totalOpenBug}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 px-5 py-3">
-            <div className="p-1.5 rounded-lg bg-emerald-950/30 border border-emerald-500/15 text-emerald-400">
-              <Lightbulb className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <p className="text-[9px] text-zinc-500 uppercase tracking-widest font-black leading-none mb-1">Saran Fitur</p>
-              <p className="text-2xl font-light text-emerald-400 leading-none">{totalOpenSaran}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 px-5 py-3">
-            <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <p className="text-[9px] text-zinc-500 uppercase tracking-widest font-black leading-none mb-1">Selesai</p>
-              <p className="text-2xl font-light text-white leading-none">{totalResolved}</p>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Main Grid: fills remaining height, clips overflow at page level */}
+      {/* ── Main Grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0 overflow-hidden">
-        {/* Left Column: List (5 cols) */}
-        <div className="lg:col-span-5 glass-panel rounded-3xl flex flex-col overflow-hidden min-h-0">
-          {/* Header Controls — fixed inside left card */}
-          <div className="p-5 border-b border-zinc-900 space-y-3 flex-shrink-0">
+        {/* ── Left: List ── */}
+        <div className="lg:col-span-5 rounded-2xl flex flex-col overflow-hidden min-h-0" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
+          {/* Controls */}
+          <div className="p-4 flex-shrink-0 space-y-3" style={{ background: "var(--bg-elevated)", borderBottom: "1px solid var(--border-subtle)" }}>
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: "var(--silver-600)" }} />
               <input
                 type="text"
                 placeholder="Cari deskripsi atau email..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl py-2.5 pl-11 pr-4 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
+                className="w-full rounded-xl py-2.5 pl-10 pr-4 text-sm"
+                style={{ background: "rgba(10,10,14,0.8)", border: "1px solid var(--border-soft)", color: "var(--silver-200)", outline: "none" }}
+                onFocus={(e) => { e.target.style.borderColor = "var(--border-silver)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "var(--border-soft)"; }}
               />
             </div>
 
-            {/* Filter Tabs Status */}
-            <div className="flex border-b border-zinc-900 pb-1">
-              <button
-                onClick={() => { setFilterStatus("open"); }}
-                className={`flex-1 pb-2 text-xs font-bold uppercase tracking-widest transition-colors relative ${
-                  filterStatus === "open" ? "text-white" : "text-zinc-500 hover:text-zinc-300"
-                }`}
-              >
-                Aktif ({feedbacks.filter(f => f.status === "open").length})
-                {filterStatus === "open" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white shadow-[0_0_8px_white]"></div>
-                )}
-              </button>
-              <button
-                onClick={() => { setFilterStatus("resolved"); }}
-                className={`flex-1 pb-2 text-xs font-bold uppercase tracking-widest transition-colors relative ${
-                  filterStatus === "resolved" ? "text-white" : "text-zinc-500 hover:text-zinc-300"
-                }`}
-              >
-                Selesai ({feedbacks.filter(f => f.status === "resolved").length})
-                {filterStatus === "resolved" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white shadow-[0_0_8px_white]"></div>
-                )}
-              </button>
+            {/* Status Tabs */}
+            <div className="flex pb-1" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+              {(["open", "resolved"] as const).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setFilterStatus(status)}
+                  className="flex-1 pb-2 text-xs font-bold uppercase tracking-widest transition-colors relative cursor-pointer"
+                  style={{ color: filterStatus === status ? "var(--silver-100)" : "var(--silver-600)" }}
+                >
+                  {status === "open" ? `Aktif (${feedbacks.filter(f => f.status === "open").length})` : `Selesai (${feedbacks.filter(f => f.status === "resolved").length})`}
+                  {filterStatus === status && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: "var(--silver-400)" }} />
+                  )}
+                </button>
+              ))}
             </div>
 
-            {/* Filter Chips Type */}
+            {/* Type Chips */}
             <div className="flex gap-2">
               {(["all", "bug", "saran"] as const).map(type => (
                 <button
                   key={type}
                   onClick={() => setFilterType(type)}
-                  className={`px-4 py-1.5 rounded-xl text-[10px] uppercase font-black tracking-widest border transition-all ${
-                    filterType === type 
-                      ? "bg-white text-black border-white" 
-                      : "bg-zinc-950 text-zinc-500 border-zinc-800 hover:text-white hover:border-zinc-700"
-                  }`}
+                  className="px-3 py-1.5 rounded-lg text-[9px] uppercase font-black tracking-widest transition-all cursor-pointer"
+                  style={
+                    filterType === type
+                      ? { background: "var(--silver-200)", color: "#0f0f13", border: "1px solid var(--silver-300)" }
+                      : { background: "var(--bg-hover)", color: "var(--silver-500)", border: "1px solid var(--border-subtle)" }
+                  }
+                  onMouseEnter={(e) => { if (filterType !== type) { (e.currentTarget as HTMLElement).style.color = "var(--silver-200)"; } }}
+                  onMouseLeave={(e) => { if (filterType !== type) { (e.currentTarget as HTMLElement).style.color = "var(--silver-500)"; } }}
                 >
                   {type === "all" ? "Semua" : type === "bug" ? "Bug" : "Saran"}
                 </button>
@@ -279,15 +186,15 @@ export default function FeedbackPage() {
             </div>
           </div>
 
-          {/* Feedback List — scrollable */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2 min-h-0">
+          {/* List */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2 min-h-0" style={{ background: "rgba(10,10,14,0.3)" }}>
             {loading ? (
-              <div className="text-center py-16 text-zinc-500 text-xs font-bold uppercase tracking-widest animate-pulse">
-                Memuat data masukan...
+              <div className="text-center py-16 text-xs font-bold uppercase tracking-widest animate-pulse font-mono" style={{ color: "var(--silver-700)" }}>
+                Memuat data...
               </div>
             ) : filteredFeedbacks.length === 0 ? (
-              <div className="text-center py-16 text-zinc-600 text-xs font-bold uppercase tracking-[0.15em] italic">
-                Tidak ada laporan masukan ditemukan.
+              <div className="text-center py-16 text-xs font-bold uppercase tracking-[0.15em] italic font-mono" style={{ color: "var(--silver-700)" }}>
+                Tidak ada laporan ditemukan.
               </div>
             ) : (
               filteredFeedbacks.map(item => {
@@ -296,45 +203,46 @@ export default function FeedbackPage() {
                   <button
                     key={item.id}
                     onClick={() => setSelectedId(item.id)}
-                    className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 flex items-start gap-4 active:scale-98 ${
+                    className="w-full text-left p-4 rounded-xl transition-all duration-200 flex items-start gap-3 cursor-pointer"
+                    style={
                       isSelected
-                        ? "bg-zinc-900 border-zinc-700 shadow-lg shadow-black/40"
-                        : "bg-zinc-950/30 border-zinc-900/60 hover:bg-zinc-900/20 hover:border-zinc-800"
-                    }`}
+                        ? { background: "var(--bg-active)", border: "1px solid var(--border-silver)" }
+                        : { background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }
+                    }
+                    onMouseEnter={(e) => { if (!isSelected) { (e.currentTarget as HTMLElement).style.background = "var(--bg-elevated)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border-soft)"; } }}
+                    onMouseLeave={(e) => { if (!isSelected) { (e.currentTarget as HTMLElement).style.background = "var(--bg-surface)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border-subtle)"; } }}
                   >
-                    {/* Icon Type */}
-                    <div className={`p-2.5 rounded-xl border mt-0.5 ${
-                      item.type === "bug" 
-                        ? "bg-red-950/20 text-red-500 border-red-500/10" 
-                        : "bg-emerald-950/20 text-emerald-400 border-emerald-500/10"
+                    <div className={`p-2 rounded-lg border mt-0.5 shrink-0 ${
+                      item.type === "bug"
+                        ? "bg-red-900/10 text-red-500 border-red-500/20"
+                        : "bg-emerald-900/10 text-emerald-400 border-emerald-500/20"
                     }`}>
-                      {item.type === "bug" ? <Bug className="w-4 h-4" /> : <Lightbulb className="w-4 h-4" />}
+                      {item.type === "bug" ? <Bug className="w-3.5 h-3.5" /> : <Lightbulb className="w-3.5 h-3.5" />}
                     </div>
 
-                    {/* Content Brief */}
                     <div className="flex-grow min-w-0">
                       <div className="flex justify-between items-center gap-2 mb-1">
-                        <span className="text-[10px] text-zinc-400 font-bold truncate">
+                        <span className="text-[10px] font-bold truncate" style={{ color: "var(--silver-400)" }}>
                           {item.user_email || "Anonim"}
                         </span>
-                        <span className={`text-[9px] px-2 py-0.5 rounded-md font-black uppercase tracking-wider ${
+                        <span className={`text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider shrink-0 ${
                           item.priority === "tinggi" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
                           item.priority === "normal" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" :
-                          "bg-zinc-900 text-zinc-500 border border-zinc-800"
-                        }`}>
+                          "border"
+                        }`} style={item.priority === "rendah" ? { background: "var(--bg-hover)", color: "var(--silver-600)", borderColor: "var(--border-subtle)" } : {}}>
                           {item.priority}
                         </span>
                       </div>
-                      <p className="text-xs text-zinc-300 font-medium line-clamp-2 leading-relaxed mb-2">
+                      <p className="text-xs font-medium line-clamp-2 leading-relaxed mb-2" style={{ color: "var(--silver-300)" }}>
                         {item.description}
                       </p>
-                      <div className="flex items-center gap-2 text-[9px] text-zinc-500 font-medium">
+                      <div className="flex items-center gap-2 text-[9px]" style={{ color: "var(--silver-600)" }}>
                         <Clock className="w-3 h-3" />
                         <span>{new Date(item.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
                       </div>
                     </div>
 
-                    <ChevronRight className={`w-4 h-4 text-zinc-600 mt-4 transition-transform ${isSelected ? "translate-x-1 text-white" : ""}`} />
+                    <ChevronRight className={`w-4 h-4 mt-4 shrink-0 transition-transform ${isSelected ? "translate-x-0.5" : ""}`} style={{ color: isSelected ? "var(--silver-300)" : "var(--silver-700)" }} />
                   </button>
                 );
               })
@@ -342,77 +250,66 @@ export default function FeedbackPage() {
           </div>
         </div>
 
-        {/* Right Column: Detail (7 cols) — scrollable */}
-        <div className="lg:col-span-7 glass-panel rounded-3xl flex flex-col overflow-hidden min-h-0">
+        {/* ── Right: Detail ── */}
+        <div className="lg:col-span-7 rounded-2xl flex flex-col overflow-hidden min-h-0" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
           {selectedFeedback ? (
             <div className="flex flex-col h-full min-h-0">
-              {/* Scrollable detail body */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-8 space-y-6 min-h-0">
-                {/* Meta details header */}
-                <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-zinc-900">
+              {/* Scrollable body */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-7 space-y-6 min-h-0">
+                {/* Header */}
+                <div className="flex flex-wrap items-center justify-between gap-4 pb-5" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
                   <div className="flex items-center gap-3">
-                    <div className={`p-3 rounded-2xl border ${
-                      selectedFeedback.type === "bug" 
-                        ? "bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.15)]" 
-                        : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_15px_rgba(52,211,153,0.15)]"
+                    <div className={`p-3 rounded-xl border ${
+                      selectedFeedback.type === "bug"
+                        ? "bg-red-500/8 text-red-500 border-red-500/20"
+                        : "bg-emerald-500/8 text-emerald-400 border-emerald-500/20"
                     }`}>
-                      {selectedFeedback.type === "bug" ? <Bug className="w-6 h-6" /> : <Lightbulb className="w-6 h-6" />}
+                      {selectedFeedback.type === "bug" ? <Bug className="w-5 h-5" /> : <Lightbulb className="w-5 h-5" />}
                     </div>
                     <div>
-                      <div className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Tipe Laporan</div>
-                      <h2 className="text-xl font-bold tracking-tight text-white capitalize">
+                      <div className="text-[9px] font-bold uppercase tracking-wider font-mono mb-0.5" style={{ color: "var(--silver-600)" }}>Tipe Laporan</div>
+                      <h2 className="text-lg font-bold tracking-tight capitalize" style={{ color: "var(--silver-100)" }}>
                         {selectedFeedback.type === "bug" ? "Bug & Kendala Sistem" : "Usulan Ide & Saran"}
                       </h2>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <div className="text-[10px] text-zinc-500 font-black uppercase tracking-wider mb-1">Tingkat Prioritas</div>
-                      <select
-                        value={selectedFeedback.priority}
-                        onChange={(e) => handlePriorityChange(selectedFeedback.id, e.target.value as any)}
-                        className={`text-[10px] px-2.5 py-1 rounded-xl font-black uppercase tracking-widest bg-zinc-950 border cursor-pointer focus:outline-none transition-all ${
-                          selectedFeedback.priority === "tinggi" ? "text-red-500 border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.15)] font-extrabold animate-pulse" :
-                          selectedFeedback.priority === "normal" ? "text-amber-400 border-amber-500/25 font-bold" :
-                          "text-zinc-400 border-zinc-800 font-bold"
-                        }`}
-                      >
-                        <option value="rendah" className="bg-zinc-950 text-zinc-400 font-bold">🟢 RENDAH</option>
-                        <option value="normal" className="bg-zinc-950 text-amber-400 font-bold">🟡 NORMAL</option>
-                        <option value="tinggi" className="bg-zinc-950 text-red-500 font-bold">🔴 TINGGI</option>
-                      </select>
+                  <div className="text-right">
+                    <div className="text-[8px] font-black uppercase tracking-wider mb-1 font-mono" style={{ color: "var(--silver-600)" }}>Tingkat Prioritas</div>
+                    <select
+                      value={selectedFeedback.priority}
+                      onChange={(e) => handlePriorityChange(selectedFeedback.id, e.target.value as any)}
+                      className="text-xs px-2.5 py-1.5 rounded-xl font-bold uppercase cursor-pointer focus:outline-none transition-all"
+                      style={{
+                        background: "var(--bg-elevated)", border: "1px solid var(--border-soft)",
+                        color: selectedFeedback.priority === "tinggi" ? "#ef4444" : selectedFeedback.priority === "normal" ? "#f59e0b" : "var(--silver-500)"
+                      }}
+                    >
+                      <option value="rendah" style={{ background: "#111118" }}>🟢 RENDAH</option>
+                      <option value="normal" style={{ background: "#111118" }}>🟡 NORMAL</option>
+                      <option value="tinggi" style={{ background: "#111118" }}>🔴 TINGGI</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Sender & Time */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-xl" style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)" }}>
+                  <div>
+                    <div className="text-[9px] font-bold uppercase tracking-widest font-mono mb-1" style={{ color: "var(--silver-600)" }}>PENGIRIM</div>
+                    <div className="text-sm font-semibold truncate" style={{ color: "var(--silver-200)" }}>{selectedFeedback.user_email || "Anonymous"}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] font-bold uppercase tracking-widest font-mono mb-1" style={{ color: "var(--silver-600)" }}>WAKTU DIKIRIM</div>
+                    <div className="text-sm font-semibold" style={{ color: "var(--silver-200)" }}>
+                      {new Date(selectedFeedback.created_at).toLocaleString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </div>
                   </div>
                 </div>
 
-                {/* Sender Email & Time */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-zinc-950/40 border border-zinc-900 p-4 rounded-2xl">
-                  <div>
-                    <div className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">PENGIRIM</div>
-                    <div className="text-sm font-semibold text-zinc-200 mt-0.5 truncate">
-                      {selectedFeedback.user_email || "Anonymous (Tidak Login)"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">WAKTU DIKIRIM</div>
-                    <div className="text-sm font-semibold text-zinc-200 mt-0.5">
-                      {new Date(selectedFeedback.created_at).toLocaleString("id-ID", {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit"
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Description Body */}
+                {/* Description */}
                 <div className="space-y-2">
-                  <div className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">DESKRIPSI KENDALA / MASUKAN</div>
-                  <div className="bg-zinc-950/20 border border-zinc-900/60 p-6 rounded-2xl text-zinc-200 text-sm leading-relaxed whitespace-pre-wrap">
+                  <div className="text-[9px] font-bold uppercase tracking-widest font-mono" style={{ color: "var(--silver-600)" }}>DESKRIPSI KENDALA / MASUKAN</div>
+                  <div className="p-5 rounded-xl text-sm leading-relaxed whitespace-pre-wrap" style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", color: "var(--silver-200)" }}>
                     {selectedFeedback.description}
                   </div>
                 </div>
@@ -420,62 +317,50 @@ export default function FeedbackPage() {
                 {/* Device Info */}
                 {selectedFeedback.device_info && (
                   <div className="space-y-2">
-                    <div className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">SPESIFIKASI HP & VERSI APLIKASI</div>
+                    <div className="text-[9px] font-bold uppercase tracking-widest font-mono" style={{ color: "var(--silver-600)" }}>SPESIFIKASI & VERSI APLIKASI</div>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      <div className="p-3 bg-zinc-950/30 border border-zinc-900 rounded-xl flex items-center gap-3">
-                        <Smartphone className="w-4 h-4 text-zinc-500" />
-                        <div>
-                          <div className="text-[8px] text-zinc-500 font-bold uppercase tracking-wider">Model HP</div>
-                          <div className="text-xs font-bold text-white capitalize">
-                            {selectedFeedback.device_info.model || "-"}
+                      {[
+                        { icon: Smartphone, label: "Model HP", value: selectedFeedback.device_info.model || "-" },
+                        { icon: Cpu, label: "OS", value: `${selectedFeedback.device_info.os || "-"} ${selectedFeedback.device_info.os_version || ""}` },
+                        { icon: Tag, label: "Versi App", value: selectedFeedback.app_version || "-" },
+                      ].map((item) => (
+                        <div key={item.label} className="p-3 rounded-xl flex items-center gap-3" style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)" }}>
+                          <item.icon className="w-4 h-4 shrink-0" style={{ color: "var(--silver-600)" }} />
+                          <div>
+                            <div className="text-[7px] font-bold uppercase tracking-wider font-mono mb-0.5" style={{ color: "var(--silver-700)" }}>{item.label}</div>
+                            <div className="text-xs font-bold capitalize" style={{ color: "var(--silver-200)" }}>{item.value}</div>
                           </div>
                         </div>
-                      </div>
-                      <div className="p-3 bg-zinc-950/30 border border-zinc-900 rounded-xl flex items-center gap-3">
-                        <Cpu className="w-4 h-4 text-zinc-500" />
-                        <div>
-                          <div className="text-[8px] text-zinc-500 font-bold uppercase tracking-wider">Sistem Operasi</div>
-                          <div className="text-xs font-bold text-white capitalize">
-                            {selectedFeedback.device_info.os} {selectedFeedback.device_info.os_version || ""}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-3 bg-zinc-950/30 border border-zinc-900 rounded-xl flex items-center gap-3">
-                        <Tag className="w-4 h-4 text-zinc-500" />
-                        <div>
-                          <div className="text-[8px] text-zinc-500 font-bold uppercase tracking-wider">Versi App</div>
-                          <div className="text-xs font-bold text-white">
-                            {selectedFeedback.app_version || "-"}
-                          </div>
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   </div>
                 )}
 
-                {/* Error Log Section */}
+                {/* Error Log */}
                 {selectedFeedback.type === "bug" && (
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <div className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest flex items-center gap-1.5">
-                        <Info className="w-3 h-3 text-red-400" /> DIAGNOSTIK ERROR LOG (errors.log)
+                      <div className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 font-mono" style={{ color: "var(--silver-600)" }}>
+                        <Info className="w-3 h-3 text-red-500" /> DIAGNOSTIK ERROR LOG
                       </div>
                       {selectedFeedback.error_log && (
                         <button
                           onClick={() => copyToClipboard(selectedFeedback.error_log!)}
-                          className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-lg text-[9px] font-bold text-zinc-400 hover:text-white hover:border-zinc-700 active:scale-95 transition-all flex items-center gap-1.5 uppercase tracking-wider"
+                          className="px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all"
+                          style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", color: "var(--silver-500)" }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-silver)"; (e.currentTarget as HTMLElement).style.color = "var(--silver-200)"; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-subtle)"; (e.currentTarget as HTMLElement).style.color = "var(--silver-500)"; }}
                         >
-                          <Copy className="w-3 h-3" />
-                          {copying ? "Tersalin!" : "Salin Log"}
+                          <Copy className="w-3 h-3" /> {copying ? "Tersalin!" : "Salin Log"}
                         </button>
                       )}
                     </div>
                     {selectedFeedback.error_log ? (
-                      <pre className="bg-zinc-950 border border-zinc-900/80 p-4 rounded-xl text-[11px] font-mono text-red-400/90 overflow-x-auto max-h-44 custom-scrollbar text-left leading-relaxed">
+                      <pre className="p-4 rounded-xl text-[11px] font-mono text-red-400/80 overflow-x-auto max-h-44 custom-scrollbar text-left leading-relaxed" style={{ background: "rgba(10,10,14,0.9)", border: "1px solid rgba(239,68,68,0.15)" }}>
                         {selectedFeedback.error_log}
                       </pre>
                     ) : (
-                      <div className="bg-zinc-950/30 border border-zinc-900 p-4 rounded-xl text-center text-xs text-zinc-600 font-medium italic">
+                      <div className="p-4 rounded-xl text-center text-xs italic font-medium" style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", color: "var(--silver-700)" }}>
                         Tidak ada log error terlampir.
                       </div>
                     )}
@@ -483,11 +368,14 @@ export default function FeedbackPage() {
                 )}
               </div>
 
-              {/* Bottom Actions Row — fixed at bottom of right card */}
-              <div className="flex-shrink-0 px-8 py-4 border-t border-zinc-900 flex justify-between items-center gap-4">
+              {/* Bottom Actions */}
+              <div className="flex-shrink-0 px-7 py-4 flex justify-between items-center gap-4" style={{ borderTop: "1px solid var(--border-subtle)", background: "rgba(10,10,14,0.3)" }}>
                 <button
                   onClick={() => handleDelete(selectedFeedback.id)}
-                  className="px-5 py-3 bg-zinc-950 border border-zinc-900 hover:border-red-950 hover:bg-red-500/5 hover:text-red-400 rounded-2xl text-xs text-zinc-500 transition-all flex items-center gap-2 font-bold uppercase tracking-widest active:scale-95"
+                  className="px-5 py-3 rounded-xl text-xs flex items-center gap-2 font-bold uppercase tracking-widest cursor-pointer transition-all"
+                  style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", color: "var(--silver-500)" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(239,68,68,0.2)"; (e.currentTarget as HTMLElement).style.color = "#ef4444"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--bg-elevated)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border-subtle)"; (e.currentTarget as HTMLElement).style.color = "var(--silver-500)"; }}
                 >
                   <Trash2 className="w-4 h-4" /> Hapus Laporan
                 </button>
@@ -495,26 +383,29 @@ export default function FeedbackPage() {
                 {selectedFeedback.status === "open" ? (
                   <button
                     onClick={() => handleResolve(selectedFeedback.id)}
-                    className="px-6 py-3 bg-white text-black hover:bg-zinc-200 rounded-2xl text-xs transition-all flex items-center gap-2 font-black uppercase tracking-widest active:scale-95 shadow-lg shadow-white/10"
+                    className="px-6 py-3 rounded-xl text-xs flex items-center gap-2 font-black uppercase tracking-widest cursor-pointer transition-all"
+                    style={{ background: "var(--silver-200)", color: "#0f0f13", border: "1px solid var(--silver-300)" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--silver-100)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 0 16px var(--silver-glow)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--silver-200)"; (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
                   >
-                    <Check className="w-4 h-4 stroke-[3px]" /> Tandai Selesai
+                    <Check className="w-4 h-4 stroke-[2.5px]" /> Tandai Selesai
                   </button>
                 ) : (
-                  <span className="px-5 py-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-black uppercase tracking-widest rounded-2xl flex items-center gap-2">
-                    <Check className="w-4 h-4 stroke-[3px]" /> Laporan Selesai
+                  <span className="px-5 py-3 text-xs font-black uppercase tracking-widest rounded-xl flex items-center gap-2" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)", color: "#10b981" }}>
+                    <Check className="w-4 h-4 stroke-[2.5px]" /> Selesai
                   </span>
                 )}
               </div>
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
-              <div className="p-4 rounded-full bg-zinc-950 border border-zinc-900 text-zinc-700">
-                <MessageSquare className="w-8 h-8" />
+              <div className="p-5 rounded-2xl" style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)" }}>
+                <MessageSquare className="w-8 h-8" style={{ color: "var(--silver-700)" }} />
               </div>
               <div>
-                <h3 className="font-bold text-zinc-500 uppercase tracking-widest text-xs">Pilih Masukan</h3>
-                <p className="text-[10px] text-zinc-600 mt-1 max-w-xs leading-relaxed">
-                  Pilih salah satu laporan bug atau saran di sebelah kiri untuk melihat rincian diagnostik & detail lengkap.
+                <h3 className="font-bold uppercase tracking-widest text-xs font-mono mb-2" style={{ color: "var(--silver-600)" }}>Pilih Masukan</h3>
+                <p className="text-[10px] max-w-xs leading-relaxed font-mono" style={{ color: "var(--silver-700)" }}>
+                  Pilih salah satu laporan bug atau saran di sebelah kiri untuk melihat rincian detail.
                 </p>
               </div>
             </div>

@@ -3,7 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import { deleteConversation, getMessages, updateAISettings } from "@/lib/actions/ai-actions";
 import { useRouter } from "next/navigation";
-import { Zap, Mic, MicOff, Volume2, VolumeX, Bot, User, Loader2, Settings, X, Save, AlertTriangle, MessageSquare, Plus, Trash2, Send } from "lucide-react";
+import {
+  Zap, Mic, MicOff, Volume2, VolumeX, Bot, User, Loader2,
+  Settings, X, Save, AlertTriangle, MessageSquare, Plus, Trash2, Send
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import McdAIOrb from "./mcdai/McdAIOrb";
@@ -37,47 +40,26 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
   const [isTyping, setIsTyping] = useState(false);
   const [isDeleting, setIsDeleting] = useState<any>(null);
   const [isDeletingProcess, setIsDeletingProcess] = useState(false);
-  
-  // Settings State
+
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [persona, setPersona] = useState(profile?.ai_settings?.persona || "");
   const [isSavingSettings, setIsSavingSettings] = useState(false);
-  
-  // Browser State
+
   const [browserUrl, setBrowserUrl] = useState<string | null>(null);
   const [isBrowserOpen, setIsBrowserOpen] = useState(false);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Voice Hook (Safe Restore)
   const { isListening, transcript, startListening, stopListening, speak } = useMcdAIVoice();
   const [isMuted, setIsMuted] = useState(false);
   const [aiStatus, setAiStatus] = useState<"idle" | "thinking" | "speaking" | "listening">("idle");
 
-  // Sync transcript to input
-  useEffect(() => {
-    if (transcript) {
-      setInputValue(transcript);
-    }
-  }, [transcript]);
+  useEffect(() => { if (transcript) setInputValue(transcript); }, [transcript]);
+  const toggleListening = () => { isListening ? stopListening() : startListening(); };
 
-  // Handle Voice Toggle
-  const toggleListening = () => {
-    if (isListening) {
-      stopListening();
-    } else {
-      startListening();
-    }
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping]);
+  const scrollToBottom = () => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); };
+  useEffect(() => { scrollToBottom(); }, [messages, isTyping]);
 
   async function loadConversation(id: string) {
     setIsLoading(true);
@@ -87,16 +69,9 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
     setIsLoading(false);
   }
 
-  function startNewChat() {
-    setCurrentConvId(null);
-    setMessages([]);
-    setInputValue("");
-  }
+  function startNewChat() { setCurrentConvId(null); setMessages([]); setInputValue(""); }
 
-  async function handleDelete(conv: any, e: React.MouseEvent) {
-    e.stopPropagation();
-    setIsDeleting(conv);
-  }
+  async function handleDelete(conv: any, e: React.MouseEvent) { e.stopPropagation(); setIsDeleting(conv); }
 
   async function handleConfirmDelete() {
     if (!isDeleting) return;
@@ -106,147 +81,101 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
       setConversations(prev => prev.filter(c => c.id !== isDeleting.id));
       if (currentConvId === isDeleting.id) startNewChat();
       setIsDeleting(null);
-    } else {
-      alert("Gagal menghapus: " + result.error);
-    }
+    } else alert("Gagal menghapus: " + result.error);
     setIsDeletingProcess(false);
   }
 
   async function handleSend() {
     if (!inputValue.trim() || isLoading || isTyping) return;
-
     const userMessage = inputValue;
     setInputValue("");
-    
-    // Optimistic UI for User Message
-    const tempUserMsg: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: userMessage,
-      created_at: new Date().toISOString()
-    };
+    const tempUserMsg: Message = { id: Date.now().toString(), role: "user", content: userMessage, created_at: new Date().toISOString() };
     setMessages(prev => [...prev, tempUserMsg]);
-    
     setIsTyping(true);
-
     try {
       setAiStatus("thinking");
       const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: userMessage,
-          conversationId: currentConvId,
-          title: userMessage.substring(0, 30)
-        })
+        body: JSON.stringify({ message: userMessage, conversationId: currentConvId, title: userMessage.substring(0, 30) })
       });
-
       const data = await response.json();
-
       if (data.success) {
         if (!currentConvId) {
           setCurrentConvId(data.conversationId);
           setConversations(prev => [{ id: data.conversationId, title: userMessage.substring(0, 30) + "...", created_at: new Date().toISOString() }, ...prev]);
         }
-        
-        const aiMsg: Message = {
-          id: Date.now().toString() + "-ai",
-          role: "assistant",
-          content: data.message,
-          created_at: new Date().toISOString()
-        };
+        const aiMsg: Message = { id: Date.now().toString() + "-ai", role: "assistant", content: data.message, created_at: new Date().toISOString() };
         setMessages(prev => [...prev, aiMsg]);
-
-        // Handle Client-side Actions (Internal Browser, etc.)
         if (data.actions && Array.isArray(data.actions)) {
           data.actions.forEach((action: any) => {
-            if (action.type === "open_url" && action.url) {
-              setBrowserUrl(action.url);
-              setIsBrowserOpen(true);
-            }
+            if (action.type === "open_url" && action.url) { setBrowserUrl(action.url); setIsBrowserOpen(true); }
           });
         }
-
-        // Speak response if not muted
         if (!isMuted) {
           setAiStatus("speaking");
-          speak(data.message.replace(/[*#`]/g, '')); // Clean markdown for speech
-          // Speaking state will naturally end after some time or we can approximate
-          setTimeout(() => setAiStatus("idle"), data.message.length * 50); 
-        } else {
-          setAiStatus("idle");
-        }
-      } else {
-        throw new Error(data.error);
-      }
+          speak(data.message.replace(/[*#`]/g, ""));
+          setTimeout(() => setAiStatus("idle"), data.message.length * 50);
+        } else setAiStatus("idle");
+      } else throw new Error(data.error);
     } catch (err: any) {
-      console.error("Chat error:", err);
       setAiStatus("idle");
-      const errMsg: Message = {
-        id: Date.now().toString() + "-error",
-        role: "assistant",
-        content: `Error: ${err.message || "Gagal menghubungi McdAI."}`,
-        created_at: new Date().toISOString()
-      };
+      const errMsg: Message = { id: Date.now().toString() + "-error", role: "assistant", content: `Error: ${err.message || "Gagal menghubungi McdAI."}`, created_at: new Date().toISOString() };
       setMessages(prev => [...prev, errMsg]);
-    } finally {
-      setIsTyping(false);
-    }
+    } finally { setIsTyping(false); }
   }
 
   const handleSaveSettings = async () => {
     setIsSavingSettings(true);
     const result = await updateAISettings({ persona });
-    if (result.success) {
-      setIsSettingsOpen(false);
-    } else {
-      alert("Gagal menyimpan pengaturan: " + result.error);
-    }
+    if (result.success) setIsSettingsOpen(false);
+    else alert("Gagal menyimpan: " + result.error);
     setIsSavingSettings(false);
   };
 
+  const suggestions = ["Check System Logs", "Security Briefing", "Backup Status", "AI Optimization"];
+
   return (
     <div className="flex w-full h-full overflow-hidden relative">
-      {/* Settings Modal */}
+      {/* ── Settings Modal ── */}
       {isSettingsOpen && (
-        <div className="absolute inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-black/40">
-          <div className="w-full max-w-xl glass-panel bg-zinc-950 border-zinc-800 rounded-3xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-zinc-900 flex items-center justify-between">
+        <div className="absolute inset-0 z-[100] flex items-center justify-center p-6" style={{ backdropFilter: "blur(12px)", background: "rgba(0,0,0,0.6)" }}>
+          <div className="w-full max-w-xl rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200" style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-silver)" }}>
+            <div className="h-px" style={{ background: "linear-gradient(90deg, transparent, var(--silver-400), transparent)" }} />
+            <div className="p-6 flex items-center justify-between" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-zinc-900 flex items-center justify-center border border-zinc-800">
-                  <Settings className="w-5 h-5 text-zinc-400" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "var(--bg-hover)", border: "1px solid var(--border-soft)" }}>
+                  <Settings className="w-5 h-5" style={{ color: "var(--silver-400)" }} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black uppercase tracking-widest text-white">AI Personalization</h3>
-                  <p className="text-[10px] text-zinc-500 font-mono">Customize McdAI behavior</p>
+                  <h3 className="text-sm font-black uppercase tracking-widest" style={{ color: "var(--silver-100)" }}>AI Personalization</h3>
+                  <p className="text-[10px] font-mono" style={{ color: "var(--silver-600)" }}>Customize McdAI behavior</p>
                 </div>
               </div>
-              <button 
-                onClick={() => setIsSettingsOpen(false)}
-                className="p-2 hover:bg-zinc-900 rounded-xl transition-all text-zinc-500 hover:text-white"
-              >
+              <button onClick={() => setIsSettingsOpen(false)} className="p-2 rounded-xl cursor-pointer transition-all" style={{ color: "var(--silver-500)" }}>
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
-            <div className="p-8 space-y-6">
+            <div className="p-7 space-y-5">
               <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 ml-1">Assistant Persona</label>
-                <textarea 
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] font-mono" style={{ color: "var(--silver-600)" }}>Assistant Persona</label>
+                <textarea
                   value={persona}
                   onChange={(e) => setPersona(e.target.value)}
-                  placeholder="Contoh: 'Jawablah dengan gaya bajak laut', 'Gunakan istilah medis', dll."
-                  className="w-full h-40 bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 text-xs text-zinc-300 focus:outline-none focus:border-white/20 transition-all resize-none font-light leading-relaxed"
+                  placeholder="Contoh: 'Jawab dengan gaya bajak laut', 'Gunakan istilah medis', dll."
+                  className="h-40 resize-none"
+                  style={{ background: "rgba(10,10,14,0.8)", border: "1px solid var(--border-soft)", color: "var(--silver-200)", borderRadius: "12px", padding: "14px", fontSize: "12px", width: "100%", outline: "none", lineHeight: "1.6" }}
+                  onFocus={(e) => { e.target.style.borderColor = "var(--border-silver)"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "var(--border-soft)"; }}
                 />
-                <p className="text-[9px] text-zinc-600 italic">
-                  * Instruksi ini akan diberikan ke AI pada setiap pesan untuk membentuk kepribadiannya.
-                </p>
               </div>
-
-              <button 
+              <button
                 onClick={handleSaveSettings}
                 disabled={isSavingSettings}
-                className="w-full h-12 bg-white text-black rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all disabled:opacity-50"
+                className="w-full h-12 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer transition-all"
+                style={{ background: "var(--silver-200)", color: "#0f0f13" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 0 20px var(--silver-glow)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
               >
                 {isSavingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Save Configuration
@@ -256,56 +185,73 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
         </div>
       )}
 
-      {/* Sidebar History */}
-      <aside className="w-80 border-r border-zinc-900 bg-zinc-950/50 flex flex-col shrink-0">
-        <div className="p-6 border-b border-zinc-900 flex items-center justify-between">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 flex items-center gap-2">
-            <Zap className="w-3 h-3 text-zinc-400" /> AI History
+      {/* ── History Sidebar ── */}
+      <aside
+        className="w-72 flex flex-col shrink-0"
+        style={{ background: "var(--bg-surface)", borderRight: "1px solid var(--border-subtle)" }}
+      >
+        <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 font-mono" style={{ color: "var(--silver-600)" }}>
+            <Zap className="w-3 h-3" style={{ color: "var(--silver-500)" }} /> AI History
           </h3>
           <div className="flex items-center gap-1">
-            <button 
+            <button
               onClick={() => setIsMuted(!isMuted)}
-              className={`p-2 rounded-xl transition-all border border-transparent hover:border-zinc-800 ${isMuted ? "text-red-500" : "text-zinc-500 hover:text-white"}`}
+              className="p-1.5 rounded-lg cursor-pointer transition-all"
+              style={{ color: isMuted ? "#ef4444" : "var(--silver-600)" }}
+              title="Toggle mute"
             >
-              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
             </button>
-            <button 
-              onClick={() => setIsSettingsOpen(true)}
-              className="p-2 hover:bg-zinc-900 rounded-xl transition-all text-zinc-500 hover:text-white border border-transparent hover:border-zinc-800"
-            >
-              <Settings className="w-4 h-4" />
+            <button onClick={() => setIsSettingsOpen(true)} className="p-1.5 rounded-lg cursor-pointer transition-all" style={{ color: "var(--silver-600)" }} title="Settings">
+              <Settings className="w-3.5 h-3.5" />
             </button>
-            <button 
+            <button
               onClick={startNewChat}
-              className="p-2 hover:bg-zinc-900 rounded-xl transition-all text-zinc-400 hover:text-white border border-transparent hover:border-zinc-800"
+              className="p-1.5 rounded-lg cursor-pointer transition-all"
+              style={{ color: "var(--silver-500)" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--silver-200)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--silver-500)"; }}
+              title="New chat"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
           {conversations.length === 0 ? (
             <div className="text-center py-10">
-              <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold">No history available</p>
+              <p className="text-[10px] uppercase tracking-widest font-bold font-mono" style={{ color: "var(--silver-700)" }}>No history</p>
             </div>
           ) : (
             conversations.map(conv => (
-              <div 
+              <div
                 key={conv.id}
                 onClick={() => loadConversation(conv.id)}
-                className={`group flex items-center justify-between p-3 rounded-2xl cursor-pointer transition-all border ${
-                  currentConvId === conv.id 
-                    ? "bg-white/5 border-zinc-700 text-white" 
-                    : "border-transparent text-zinc-500 hover:bg-white/5 hover:text-zinc-300"
-                }`}
+                className="group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all"
+                style={
+                  currentConvId === conv.id
+                    ? { background: "var(--bg-active)", border: "1px solid var(--border-silver)", color: "var(--silver-100)" }
+                    : { border: "1px solid transparent", color: "var(--silver-500)" }
+                }
+                onMouseEnter={(e) => {
+                  if (currentConvId !== conv.id) { (e.currentTarget as HTMLElement).style.background = "var(--bg-hover)"; (e.currentTarget as HTMLElement).style.color = "var(--silver-300)"; }
+                }}
+                onMouseLeave={(e) => {
+                  if (currentConvId !== conv.id) { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--silver-500)"; }
+                }}
               >
                 <div className="flex items-center gap-3 overflow-hidden">
-                  <MessageSquare className={`w-4 h-4 shrink-0 ${currentConvId === conv.id ? "text-white" : "text-zinc-700"}`} />
+                  <MessageSquare className={`w-4 h-4 shrink-0 ${currentConvId === conv.id ? "text-white" : ""}`} style={{ color: currentConvId === conv.id ? "var(--silver-300)" : "var(--silver-700)" }} />
                   <span className="text-xs font-medium truncate">{conv.title}</span>
                 </div>
-                <button 
+                <button
                   onClick={(e) => handleDelete(conv, e)}
-                  className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all"
+                  className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all cursor-pointer"
+                  style={{ color: "var(--silver-600)" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#ef4444"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--silver-600)"; }}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -315,26 +261,39 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
         </div>
       </aside>
 
-      {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col relative bg-zinc-950">
-        <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar relative">
+      {/* ── Chat Area ── */}
+      <main className="flex-1 flex flex-col relative" style={{ background: "var(--bg-root)" }}>
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-8 space-y-8 relative">
           {messages.length === 0 && !isLoading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center">
-              <div className="mb-8">
+              <div className="mb-8 animate-float">
                 <McdAIOrb status={isListening ? "listening" : aiStatus} />
               </div>
-              <h2 className="text-3xl font-black tracking-tighter text-white mb-2 italic uppercase">Intelligence Core</h2>
-              <p className="text-zinc-500 max-w-sm text-[10px] font-black uppercase tracking-[0.3em] leading-relaxed opacity-50">
+              <h2 className="text-3xl font-black tracking-tighter mb-2 italic uppercase" style={{ color: "var(--silver-100)" }}>
+                Intelligence Core
+              </h2>
+              <p className="max-w-sm text-[10px] font-black uppercase tracking-[0.3em] leading-relaxed opacity-40 font-mono" style={{ color: "var(--silver-400)" }}>
                 SukaMCD Administrative Personal Assistant
               </p>
               <div className="mt-12 grid grid-cols-2 gap-3 w-full max-w-md">
-                {["Check System Logs", "Security Briefing", "Backup Status", "AI Optimization"].map(topic => (
-                  <button 
+                {suggestions.map(topic => (
+                  <button
                     key={topic}
-                    onClick={() => { setInputValue(`Bantu saya dengan: ${topic}`); }}
-                    className="p-4 rounded-2xl bg-zinc-900/40 border border-zinc-800/50 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white hover:border-emerald-500/30 transition-all text-left group flex items-center justify-between"
+                    onClick={() => setInputValue(`Bantu saya dengan: ${topic}`)}
+                    className="p-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-left flex items-center justify-between cursor-pointer group transition-all"
+                    style={{ background: "var(--bg-surface)", border: "1px solid var(--border-subtle)", color: "var(--silver-500)" }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = "var(--bg-elevated)";
+                      (e.currentTarget as HTMLElement).style.borderColor = "var(--border-silver)";
+                      (e.currentTarget as HTMLElement).style.color = "var(--silver-200)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = "var(--bg-surface)";
+                      (e.currentTarget as HTMLElement).style.borderColor = "var(--border-subtle)";
+                      (e.currentTarget as HTMLElement).style.color = "var(--silver-500)";
+                    }}
                   >
-                    {topic}
+                    <span>{topic}</span>
                     <Zap className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500" />
                   </button>
                 ))}
@@ -344,49 +303,57 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
 
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
-              <Loader2 className="w-10 h-10 text-zinc-800 animate-spin" />
+              <Loader2 className="w-10 h-10 animate-spin" style={{ color: "var(--silver-700)" }} />
             </div>
           ) : (
-            <div className="max-w-4xl mx-auto w-full space-y-8 pb-32">
+            <div className="max-w-4xl mx-auto w-full space-y-6 pb-36">
               {messages.map(msg => (
-                <div 
+                <div
                   key={msg.id}
                   className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2 duration-300`}
                 >
-                  <div className={`flex gap-4 max-w-[85%] ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border overflow-hidden ${
-                      msg.role === "user" 
-                        ? "bg-zinc-800 border-zinc-700 text-white" 
-                        : "bg-white text-black border-white"
-                    }`}>
+                  <div className={`flex gap-3 max-w-[85%] ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                    <div
+                      className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 overflow-hidden ${
+                        msg.role === "user" ? "" : ""
+                      }`}
+                      style={
+                        msg.role === "user"
+                          ? { background: "var(--bg-elevated)", border: "1px solid var(--border-silver)" }
+                          : { background: "var(--silver-200)", border: "1px solid var(--silver-300)" }
+                      }
+                    >
                       {msg.role === "user" ? (
                         profile?.profile_picture ? (
                           <img src={profile.profile_picture} alt="Avatar" className="w-full h-full object-cover" />
                         ) : (
-                          <User className="w-4 h-4" />
+                          <User className="w-4 h-4" style={{ color: "var(--silver-400)" }} />
                         )
                       ) : (
-                        <Bot className="w-4 h-4" />
+                        <Bot className="w-4 h-4" style={{ color: "#0f0f13" }} />
                       )}
                     </div>
-                    <div className={`px-6 py-4 rounded-3xl text-sm leading-relaxed border ${
-                      msg.role === "user"
-                        ? "bg-zinc-900 border-zinc-800 text-zinc-100"
-                        : "glass-panel border-zinc-800 text-zinc-300"
-                    }`}>
-                      <ReactMarkdown 
+                    <div
+                      className="px-5 py-3.5 rounded-2xl text-sm leading-relaxed"
+                      style={
+                        msg.role === "user"
+                          ? { background: "var(--bg-elevated)", border: "1px solid var(--border-silver)", color: "var(--silver-100)" }
+                          : { background: "var(--bg-surface)", border: "1px solid var(--border-subtle)", color: "var(--silver-200)" }
+                      }
+                    >
+                      <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
                           pre: ({ node, ...props }) => (
-                            <div className="bg-black/50 p-4 rounded-2xl border border-zinc-800 my-4 overflow-x-auto">
-                              <pre {...props} className="font-mono text-zinc-300 text-xs" />
+                            <div className="my-4 rounded-xl overflow-x-auto" style={{ background: "rgba(10,10,14,0.9)", border: "1px solid var(--border-subtle)", padding: "16px" }}>
+                              <pre {...props} className="font-mono text-xs" style={{ color: "var(--silver-300)" }} />
                             </div>
                           ),
                           code: ({ node, ...props }) => (
-                            <code className="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-200 font-mono text-xs" {...props} />
+                            <code className="px-1.5 py-0.5 rounded font-mono text-xs" style={{ background: "rgba(10,10,14,0.8)", border: "1px solid var(--border-subtle)", color: "var(--silver-300)" }} {...props} />
                           ),
-                          h1: ({ node, ...props }) => <h1 className="text-xl font-bold mb-4 mt-6 text-white" {...props} />,
-                          h2: ({ node, ...props }) => <h2 className="text-lg font-bold mb-3 mt-5 text-white underline decoration-zinc-700 decoration-2 underline-offset-4" {...props} />,
+                          h1: ({ node, ...props }) => <h1 className="text-xl font-bold mb-4 mt-6" style={{ color: "var(--silver-100)" }} {...props} />,
+                          h2: ({ node, ...props }) => <h2 className="text-lg font-bold mb-3 mt-5" style={{ color: "var(--silver-100)" }} {...props} />,
                           p: ({ node, ...props }) => <p className="mb-4 last:mb-0" {...props} />,
                           ul: ({ node, ...props }) => <ul className="list-disc ml-4 mb-4 space-y-1" {...props} />,
                           ol: ({ node, ...props }) => <ol className="list-decimal ml-4 mb-4 space-y-1" {...props} />,
@@ -398,14 +365,14 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
                   </div>
                 </div>
               ))}
-              
+
               {isTyping && (
                 <div className="flex justify-start animate-pulse">
-                  <div className="flex gap-4 items-start">
-                    <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center border border-white">
-                      <Bot className="w-4 h-4 text-black" />
+                  <div className="flex gap-3 items-start">
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "var(--silver-200)", border: "1px solid var(--silver-300)" }}>
+                      <Bot className="w-4 h-4" style={{ color: "#0f0f13" }} />
                     </div>
-                    <div className="px-6 py-4 rounded-3xl bg-zinc-900 border border-zinc-800 text-zinc-500 text-xs font-mono uppercase tracking-widest italic">
+                    <div className="px-5 py-3.5 rounded-2xl text-xs font-mono uppercase tracking-widest italic" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-subtle)", color: "var(--silver-600)" }}>
                       McdAI sedang berpikir...
                     </div>
                   </div>
@@ -416,75 +383,72 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
           )}
         </div>
 
-        {/* Input Area */}
-        <div className="absolute bottom-0 inset-x-0 p-8 pt-0 z-20">
+        {/* ── Input Area ── */}
+        <div className="absolute bottom-0 inset-x-0 p-6 pt-0 z-20">
           <div className="max-w-4xl mx-auto">
-            <div className="relative glass-panel rounded-3xl p-1.5 border-zinc-800 bg-zinc-950/80 backdrop-blur-3xl shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+            <div
+              className="relative rounded-2xl p-1.5 shadow-2xl"
+              style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-silver)" }}
+            >
               <div className="flex items-end gap-2 px-3 py-2">
-                <textarea 
+                <textarea
                   rows={1}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend();
-                    }
-                  }}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                   placeholder="Katakan sesuatu ke McdAI..."
-                  className="w-full bg-transparent border-none text-sm text-zinc-200 focus:outline-none resize-none py-2 px-2 max-h-40 font-light placeholder:text-zinc-700"
-                  style={{ height: 'auto' }}
+                  className="w-full bg-transparent border-none text-sm focus:outline-none resize-none py-2 px-2 max-h-40 font-light"
+                  style={{ color: "var(--silver-200)" }}
                 />
-                <button 
+                <button
                   onClick={toggleListening}
-                  className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all border ${
-                    isListening 
-                      ? "bg-red-500/10 border-red-500 text-red-500 animate-pulse" 
-                      : "bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-white hover:border-zinc-700"
-                  }`}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${isListening ? "animate-pulse" : ""}`}
+                  style={
+                    isListening
+                      ? { background: "rgba(239,68,68,0.1)", border: "1px solid #ef4444", color: "#ef4444" }
+                      : { background: "var(--bg-hover)", border: "1px solid var(--border-subtle)", color: "var(--silver-500)" }
+                  }
                 >
                   {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                 </button>
-                <button 
+                <button
                   onClick={handleSend}
                   disabled={!inputValue.trim() || isLoading || isTyping}
-                  className="w-10 h-10 bg-white text-black rounded-2xl flex items-center justify-center hover:bg-zinc-200 transition-all shadow-xl disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 cursor-pointer"
+                  style={{ background: "var(--silver-200)", color: "#0f0f13" }}
+                  onMouseEnter={(e) => { if (!isLoading && !isTyping) (e.currentTarget as HTMLElement).style.boxShadow = "0 0 16px var(--silver-glow)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
                 >
                   {isTyping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </button>
               </div>
             </div>
-            <p className="text-[9px] text-zinc-700 text-center mt-4 tracking-[0.3em] font-black uppercase">
+            <p className="text-[9px] text-center mt-3 tracking-[0.3em] font-black uppercase font-mono" style={{ color: "var(--silver-700)" }}>
               Powered by Groq • LLaMA-3.3 Intelligence
             </p>
           </div>
         </div>
       </main>
-      {/* Delete Confirmation Modal */}
+
+      {/* ── Delete Modal ── */}
       {isDeleting && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-sm glass-panel bg-zinc-950 border-red-900/50 rounded-[2rem] overflow-hidden animate-in zoom-in-95">
+        <div className="fixed inset-0 z-[500] flex items-center justify-center p-6" style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(12px)" }}>
+          <div className="w-full max-w-sm rounded-2xl overflow-hidden animate-in zoom-in-95" style={{ background: "var(--bg-elevated)", border: "1px solid rgba(239,68,68,0.25)" }}>
+            <div className="h-px bg-red-600 opacity-60" />
             <div className="p-8 flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
                 <AlertTriangle className="w-8 h-8 text-red-500" />
               </div>
-              <h3 className="text-sm font-black uppercase tracking-widest text-white mb-2">Secure Destruction</h3>
-              <p className="text-xs text-zinc-500 leading-relaxed mb-8 px-4">
-                Apakah Anda yakin ingin menghapus <span className="text-red-400 font-bold">"{isDeleting.title}"</span>? Pesan akan dihapus secara permanen dari Intelligence Core.
+              <h3 className="text-sm font-black uppercase tracking-widest font-mono mb-2" style={{ color: "var(--silver-100)" }}>Confirm Delete</h3>
+              <p className="text-xs leading-relaxed mb-8 px-4" style={{ color: "var(--silver-500)" }}>
+                Delete <span className="text-red-400 font-bold">"{isDeleting.title}"</span>? This conversation will be permanently removed.
               </p>
               <div className="flex flex-col w-full gap-3">
-                <button 
-                  onClick={handleConfirmDelete}
-                  disabled={isDeletingProcess}
-                  className="w-full py-4 bg-red-500 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 disabled:opacity-50"
-                >
-                  {isDeletingProcess ? "Neutralizing..." : "Confirm Delete"}
+                <button onClick={handleConfirmDelete} disabled={isDeletingProcess} className="w-full py-4 bg-red-600 text-white font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-red-700 transition-all cursor-pointer disabled:opacity-50">
+                  {isDeletingProcess ? "Deleting..." : "Confirm Delete"}
                 </button>
-                <button 
-                  onClick={() => setIsDeleting(null)}
-                  className="w-full py-4 bg-zinc-900 text-zinc-400 font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-zinc-800 transition-all"
-                >
-                  Cancel Operation
+                <button onClick={() => setIsDeleting(null)} className="w-full py-4 font-black uppercase tracking-widest text-[10px] rounded-xl cursor-pointer" style={{ background: "var(--bg-hover)", color: "var(--silver-500)", border: "1px solid var(--border-subtle)" }}>
+                  Cancel
                 </button>
               </div>
             </div>
@@ -492,12 +456,7 @@ export default function AIChatContainer({ initialConversations, profile }: AICha
         </div>
       )}
 
-      {/* Internal Browser Overlay */}
-      <McdAIBrowser 
-        url={browserUrl}
-        isOpen={isBrowserOpen}
-        onClose={() => setIsBrowserOpen(false)}
-      />
+      <McdAIBrowser url={browserUrl} isOpen={isBrowserOpen} onClose={() => setIsBrowserOpen(false)} />
     </div>
   );
 }

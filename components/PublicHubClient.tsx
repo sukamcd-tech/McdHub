@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ArrowUpRight, Plus, Laptop } from "lucide-react";
 
 interface Project {
   id: string;
@@ -17,29 +18,65 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
   const router = useRouter();
 
   return (
-    <div className="min-h-screen flex flex-col justify-between p-8 lg:p-16 bg-black text-white">
-      {/* Header */}
-      <header className="flex justify-between items-center w-full max-w-7xl mx-auto">
-        <div className="text-xl font-semibold tracking-tighter text-white">SUKAMCD</div>
-        <div className="h-px bg-zinc-800 flex-grow mx-8 hidden sm:block"></div>
-        <div className="text-sm text-zinc-500 hover:text-white transition-colors cursor-default">
-          Established 2026
+    <div className="h-screen max-h-screen overflow-hidden flex flex-col justify-between p-8 lg:p-12 relative select-none bg-[var(--bg-root)] text-[var(--silver-100)]">
+      
+      {/* ── High-Tech Cyber Grid Background ── */}
+      <div 
+        className="absolute inset-0 opacity-[0.02] pointer-events-none"
+        style={{
+          backgroundImage: `radial-gradient(var(--silver-400) 1px, transparent 1px)`,
+          backgroundSize: '32px 32px'
+        }}
+      />
+
+      {/* ── Header ── */}
+      <header className="w-full max-w-7xl mx-auto flex justify-between items-center z-10 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-6 h-6 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] flex items-center justify-center shadow-lg">
+            <span className="w-2 h-2 rounded-full bg-[var(--silver-300)]" />
+          </div>
+          <span className="text-sm font-black uppercase tracking-[0.25em] font-mono text-[var(--silver-200)]">
+            SUKAMCD
+          </span>
+        </div>
+        
+        <div className="h-px bg-gradient-to-r from-[var(--border-subtle)] via-[var(--border-soft)] to-transparent flex-grow mx-8 hidden sm:block" />
+        
+        <div className="flex items-center gap-2.5 z-10">
+          <Link 
+            href="/projects" 
+            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-2 cursor-pointer"
+          >
+            Projects
+          </Link>
+          <Link 
+            href="/contact" 
+            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-2 cursor-pointer"
+          >
+            Contact
+          </Link>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="w-full max-w-7xl mx-auto flex flex-col items-center">
-        <div className="mb-12 text-center animate-in fade-in slide-in-from-top-4 duration-1000">
-          <h1 className="text-5xl lg:text-7xl font-light tracking-tighter mb-4 text-gradient">
+      {/* ── Main Hero & Cards Container ── */}
+      <main className="w-full max-w-7xl mx-auto flex-1 flex flex-col justify-center items-center z-10 py-6">
+        <div className="text-center mb-12 space-y-3 animate-in fade-in slide-in-from-top-4 duration-1000 shrink-0">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-soft)] shadow-md select-none">
+            <Laptop className="w-3.5 h-3.5 text-[var(--silver-400)]" />
+            <span className="text-[8.5px] font-black uppercase tracking-[0.2em] text-[var(--silver-400)] font-mono">Central Index Portal</span>
+          </div>
+
+          <h1 className="text-4xl lg:text-6xl font-black tracking-tight leading-tight pb-2 text-gradient bg-gradient-to-b from-[var(--silver-100)] via-[var(--silver-200)] to-[var(--silver-500)] bg-clip-text text-transparent">
             Central Project Hub
           </h1>
-          <p className="text-zinc-400 max-w-md mx-auto text-base font-light leading-relaxed opacity-70">
-            A curated collection of digital experiences and experiments by SukaMCD.
+          
+          <p className="text-[11.5px] uppercase tracking-wider text-[var(--silver-500)] font-mono max-w-lg mx-auto leading-relaxed mt-2 opacity-80">
+            A curated collection of digital experiences and functional experiments by SukaMCD.
           </p>
         </div>
 
-        {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+        {/* ── Projects Cards Grid ── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full items-stretch">
           {(() => {
             const projectsToRender = [...initialProjects];
             const placeholdersNeeded = Math.max(0, 3 - projectsToRender.length);
@@ -51,33 +88,47 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
                   const IsActive = project.status === 'ONLINE';
 
                   const CardContent = (
-                    <div className="flex flex-col h-full justify-between">
-                      <div>
-                        <div className="text-[10px] text-zinc-400 mb-3 tracking-widest uppercase font-black opacity-80">
-                          {project.category}
+                    <div className="flex flex-col h-full justify-between gap-5 relative select-none">
+                      {/* Accent lines on card */}
+                      <div className="absolute -top-5 -left-5 -right-5 h-px bg-gradient-to-r from-transparent via-[var(--border-soft)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                      <div className="space-y-3.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[8.5px] font-black font-mono uppercase tracking-[0.2em] text-[var(--silver-500)]">
+                            {project.category}
+                          </span>
+                          {IsActive && (
+                            <ArrowUpRight className="w-4 h-4 text-[var(--silver-500)] opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                          )}
                         </div>
-                        <h3 className="text-xl font-bold mb-1.5 group-hover:translate-x-1 transition-transform text-white tracking-tight">
-                          {project.title}
-                        </h3>
-                        <p className="text-zinc-300 text-xs font-light leading-relaxed line-clamp-2">
-                          {project.description}
-                        </p>
+
+                        <div>
+                          <h3 className="text-xl font-bold text-[var(--silver-100)] tracking-tight mb-1.5 group-hover:translate-x-1 transition-transform">
+                            {project.title}
+                          </h3>
+                          <p className="text-[11.5px] font-medium leading-relaxed text-[var(--silver-500)] line-clamp-2">
+                            {project.description}
+                          </p>
+                        </div>
                       </div>
-                      <div className="mt-6 flex items-center text-[10px] text-zinc-400 gap-2 font-black uppercase tracking-widest">
-                        <span className={IsActive ? "text-zinc-400" : "text-zinc-600"}>{project.status}</span>
+
+                      <div className="flex items-center gap-2 font-mono text-[8px] font-black uppercase tracking-[0.15em] border-t border-[var(--border-subtle)] pt-3.5 select-none">
+                        <span className={IsActive ? "text-[var(--silver-300)]" : "text-[var(--silver-600)]"}>
+                          {project.status}
+                        </span>
                         <span className={`w-1.5 h-1.5 rounded-full ${
-                          project.status === 'ONLINE' ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.6)]' : 
-                          project.status === 'MAINTENANCE' ? 'bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.6)]' :
-                          'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]'
+                          project.status === 'ONLINE' ? 'bg-emerald-500 animate-emerald-pulse' : 
+                          project.status === 'MAINTENANCE' ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.3)]' :
+                          'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)]'
                         }`}></span>
                       </div>
                     </div>
                   );
 
-                  const commonClasses = `project-card bg-zinc-900/40 backdrop-blur-md p-7 rounded-[1.8rem] transition-all duration-300 border border-zinc-700/50 h-[210px] ${
+                  const commonClasses = `card p-6.5 rounded-2xl flex flex-col justify-between h-[215px] relative overflow-hidden select-none border border-[var(--border-subtle)] ${
                     IsActive 
-                      ? "group hover:border-zinc-500 hover:bg-zinc-800/40 cursor-pointer" 
-                      : "cursor-not-allowed grayscale-[0.5] opacity-60"
+                      ? "group cursor-pointer hover:border-[var(--border-silver)] hover:bg-[var(--bg-elevated)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.6)]" 
+                      : "cursor-not-allowed opacity-50 bg-[var(--bg-surface)]"
                   }`;
 
                   if (!IsActive) {
@@ -95,7 +146,7 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
                         href={project.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={commonClasses + " group"}
+                        className={commonClasses}
                       >
                         {CardContent}
                       </a>
@@ -106,7 +157,7 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
                     <Link
                       key={project.id}
                       href={project.url || "#"}
-                      className={commonClasses + " group"}
+                      className={commonClasses}
                     >
                       {CardContent}
                     </Link>
@@ -114,8 +165,12 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
                 })}
                 
                 {Array.from({ length: placeholdersNeeded }).map((_, i) => (
-                  <div key={`placeholder-${i}`} className="bg-zinc-950/20 backdrop-blur-sm p-7 rounded-[1.8rem] border border-dashed border-zinc-800/50 opacity-40 flex items-center justify-center italic text-zinc-500 text-[11px] select-none h-[210px]">
-                    New project coming soon
+                  <div 
+                    key={`placeholder-${i}`} 
+                    className="p-6.5 rounded-2xl border border-dashed border-[var(--border-soft)] bg-[rgba(10,10,14,0.15)] flex flex-col items-center justify-center gap-2.5 text-center text-[9.5px] font-black uppercase tracking-[0.25em] font-mono text-[var(--silver-700)] select-none h-[215px]"
+                  >
+                    <Plus className="w-4 h-4 text-[var(--silver-700)] opacity-60" />
+                    <span>Project Incoming</span>
                   </div>
                 ))}
               </>
@@ -124,23 +179,23 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="w-full max-w-7xl mx-auto border-t border-zinc-900 pt-8 flex justify-between items-end mt-12">
-        <div>
-          <div className="text-xs text-zinc-600 mb-2 font-medium">
+      {/* ── Footer ── */}
+      <footer className="w-full max-w-7xl mx-auto border-t border-[var(--border-subtle)] pt-6 flex justify-between items-end z-10 shrink-0 select-none">
+        <div className="space-y-2.5">
+          <div className="text-[9px] font-black uppercase tracking-wider text-[var(--silver-600)] font-mono">
             &copy; {currentYear} SukaMCD. All rights reserved.
           </div>
-          <div className="flex gap-4">
-            <a href="https://github.com/SukaMCD" className="text-xs text-zinc-500 hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">Github</a>
-            <a href="https://www.instagram.com/sukamcd.dev/" className="text-xs text-zinc-500 hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">Instagram</a>
-            <a href="https://www.linkedin.com/in/fabianrizkypratama/" className="text-xs text-zinc-500 hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+          <div className="flex gap-5">
+            <a href="https://github.com/SukaMCD" className="text-[9px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">Github</a>
+            <a href="https://www.instagram.com/sukamcd.dev/" className="text-[9px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a href="https://www.linkedin.com/in/fabianrizkypratama/" className="text-[9px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">LinkedIn</a>
           </div>
         </div>
         
-        {/* Hidden Gate Button */}
+        {/* ── Hidden Gateway Backdoor (100% stealthy, no cursor change, no hover style change, no tooltips) ── */}
         <div
           onClick={() => router.push("/gateway")}
-          className="w-2 h-2 rounded-full bg-zinc-900 hover:bg-zinc-800 transition-all duration-500 cursor-default shadow-[0_0_0_transparent]"
+          className="w-2.5 h-2.5 rounded-full cursor-default bg-zinc-900 border border-[var(--border-soft)]"
         />
       </footer>
     </div>

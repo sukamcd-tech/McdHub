@@ -22,7 +22,7 @@ export default async function AdminLayout({
     .single();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-black text-zinc-100">
+    <div className="flex h-screen overflow-hidden text-zinc-100" style={{ background: "var(--bg-root)" }}>
       <Sidebar />
       <div className="relative flex flex-1 flex-col overflow-hidden">
         <AdminHeader user={user} profile={profile} />

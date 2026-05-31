@@ -2,16 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Activity, 
-  Shield, 
-  User, 
-  Database, 
-  Terminal, 
-  RefreshCw,
-  Clock,
-  Eye,
-  Info
+import {
+  Activity, Shield, User, Database, Terminal,
+  RefreshCw, Clock, Eye, Info, Server, Layers, CheckCircle2
 } from "lucide-react";
 import { getSystemLogs, LogCategory } from "@/lib/actions/log-actions";
 
@@ -22,21 +15,16 @@ interface LogsClientProps {
 export default function LogsClient({ initialLogs }: LogsClientProps) {
   const [logs, setLogs] = useState<any[]>(initialLogs);
   const [isLoading, setIsLoading] = useState(false);
-  const [filter, setFilter] = useState<LogCategory | 'ALL'>('ALL');
+  const [filter, setFilter] = useState<LogCategory | "ALL">("ALL");
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
 
-  // Sync state with server logs if page is revalidated
-  useEffect(() => {
-    setLogs(initialLogs);
-  }, [initialLogs]);
+  useEffect(() => { setLogs(initialLogs); }, [initialLogs]);
 
   const fetchLogs = async () => {
     setIsLoading(true);
     try {
       const result = await getSystemLogs(50);
-      if (result.success && result.logs) {
-        setLogs(result.logs);
-      }
+      if (result.success && result.logs) setLogs(result.logs);
     } catch (error) {
       console.error("Failed to load logs:", error);
     } finally {
@@ -45,144 +33,202 @@ export default function LogsClient({ initialLogs }: LogsClientProps) {
   };
 
   useEffect(() => {
-    // Refresh every 30 seconds for live feel
     const interval = setInterval(fetchLogs, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const filteredLogs = logs.filter(log => 
-    filter === 'ALL' ? true : log.category === filter
-  );
-
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'SECURITY': return <Shield className="w-3.5 h-3.5" />;
-      case 'USER_ACTION': return <User className="w-3.5 h-3.5" />;
-      case 'DATABASE': return <Database className="w-3.5 h-3.5" />;
-      default: return <Terminal className="w-3.5 h-3.5" />;
-    }
-  };
+  const filteredLogs = logs.filter(log => filter === "ALL" ? true : log.category === filter);
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'SECURITY': return 'text-red-400 bg-red-400/10 border-red-400/20';
-      case 'USER_ACTION': return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
-      case 'DATABASE': return 'text-blue-400 bg-blue-400/10 border-blue-400/20';
-      default: return 'text-zinc-400 bg-zinc-400/10 border-zinc-400/20';
+      case "SECURITY": return { bg: "rgba(239,68,68,0.06)", border: "rgba(239,68,68,0.2)", text: "#ef4444" };
+      case "USER_ACTION": return { bg: "rgba(16,185,129,0.06)", border: "rgba(16,185,129,0.2)", text: "#10b981" };
+      case "DATABASE": return { bg: "rgba(212,212,216,0.06)", border: "rgba(212,212,216,0.15)", text: "var(--silver-300)" };
+      default: return { bg: "rgba(255,255,255,0.03)", border: "var(--border-soft)", text: "var(--silver-400)" };
     }
   };
 
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "SECURITY": return <Shield className="w-3 h-3" />;
+      case "USER_ACTION": return <User className="w-3 h-3" />;
+      case "DATABASE": return <Database className="w-3 h-3" />;
+      default: return <Terminal className="w-3 h-3" />;
+    }
+  };
+
+  const filterCategories = ["ALL", "SYSTEM", "USER_ACTION", "SECURITY"] as const;
+
   return (
-    <div className="w-full h-full flex flex-col space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-zinc-900/50">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-             <div className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-800">
-                <Activity className="w-4 h-4 text-emerald-500" />
-             </div>
-             <h1 className="text-2xl font-black tracking-tighter text-white uppercase italic">
-               System Audit Trail
-             </h1>
-          </div>
-          <p className="text-[9px] text-zinc-600 font-light ml-11 uppercase tracking-widest">Real-time Activity Stream</p>
+    <div className="w-full h-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 select-none">
+      {/* ── Page Header ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-[var(--border-subtle)]">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.3em] font-black text-[var(--silver-500)] font-mono mb-2">
+            Immutable Audit Trail
+          </p>
+          <h1 className="text-4xl font-black tracking-tight flex items-center gap-3 text-[var(--silver-100)]">
+            <Activity className="w-7 h-7 text-[var(--silver-300)]" />
+            System Audit Logs
+          </h1>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <button 
+
+        <div className="flex items-center gap-3">
+          <button
             onClick={fetchLogs}
             disabled={isLoading}
-            className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg hover:border-zinc-700 transition-all group disabled:opacity-50"
-            title="Refresh logs"
+            className="p-3 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-soft)] text-[var(--silver-500)] transition-all hover:border-[var(--border-silver)] hover:text-[var(--silver-200)] disabled:opacity-50 cursor-pointer"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-all ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
           </button>
-          
-          <div className="h-4 w-px bg-zinc-800 mx-1"></div>
-          
-          <div className="flex items-center gap-1 bg-zinc-900/50 p-1 rounded-lg border border-zinc-900">
-            {(['ALL', 'SYSTEM', 'USER_ACTION', 'SECURITY'] as const).map((cat) => (
+
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)]">
+            {filterCategories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setFilter(cat)}
-                className={`px-3 py-1 text-[8px] font-black uppercase tracking-wider rounded-md transition-all ${
-                  filter === cat 
-                    ? 'bg-zinc-800 text-white shadow-lg' 
-                    : 'text-zinc-600 hover:text-zinc-400'
+                className={`px-4 py-2 text-[9px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer border ${
+                  filter === cat
+                    ? "bg-[var(--bg-active)] border-[var(--border-silver)] text-[var(--silver-100)] shadow-[0_0_12px_rgba(255,255,255,0.03)]"
+                    : "border-transparent text-[var(--silver-600)] hover:text-[var(--silver-300)]"
                 }`}
               >
-                {cat.replace('_', ' ')}
+                {cat.replace("_", " ")}
               </button>
             ))}
           </div>
         </div>
       </div>
 
+      {/* ── Metrics Strip ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        {[
+          { label: "Active Stream", value: "Audit Pipeline Online", icon: Server, color: "text-emerald-400" },
+          { label: "Pipeline Status", value: "Operational", icon: CheckCircle2, color: "text-emerald-400" },
+          { label: "Active Buffer", value: `${logs.length} Buffered Events`, icon: Layers, color: "text-[var(--silver-300)]" }
+        ].map((stat, i) => {
+          const Icon = stat.icon;
+          return (
+            <div key={i} className="p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-center justify-between gap-4">
+              <div>
+                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--silver-500)] font-mono">{stat.label}</span>
+                <p className={`text-xs font-bold font-mono tracking-tight ${stat.color} mt-1`}>{stat.value}</p>
+              </div>
+              <div className="p-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-soft)]">
+                <Icon className="w-4 h-4 text-[var(--silver-400)]" />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Main Content Grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
-        {/* Main Log List */}
-        <div className="lg:col-span-8 glass-panel rounded-[1.5rem] border-zinc-800/50 flex flex-col bg-zinc-950/20 overflow-hidden h-[calc(100vh-230px)]">
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-1">
-            <table className="w-full text-left border-separate border-spacing-y-2 px-4">
-              <thead className="sticky top-0 bg-[#0a0a0a] z-10">
-                <tr className="text-zinc-600 text-[8px] font-black uppercase tracking-[0.2em]">
-                  <th className="pb-4 pl-4 uppercase">Event / Description</th>
-                  <th className="pb-4 uppercase text-center w-24">Category</th>
-                  <th className="pb-4 uppercase text-right pr-4">Timestamp</th>
+        {/* ── Left: Audit Table Terminal ── */}
+        <div className="lg:col-span-8 rounded-2xl flex flex-col overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-surface)]" style={{ height: "calc(100vh - 280px)" }}>
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
+            <table className="w-full text-left border-separate border-spacing-y-2">
+              <thead className="sticky top-0 z-10 bg-[var(--bg-surface)]">
+                <tr className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--silver-600)] font-mono">
+                  <th className="pb-3 pl-4">Event Trigger / Scope</th>
+                  <th className="pb-3 text-center w-28">Category</th>
+                  <th className="pb-3 text-right pr-4">Timestamp</th>
                 </tr>
               </thead>
-              <tbody className="space-y-2">
+              <tbody>
                 <AnimatePresence mode="popLayout">
-                  {filteredLogs.map((log) => (
-                    <motion.tr
-                      key={log.id}
-                      layout
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, scale: 0.98 }}
-                      onClick={() => setSelectedLog(log)}
-                      className="group cursor-pointer"
-                    >
-                      <td className="bg-zinc-900/40 border-y border-l border-zinc-800/50 rounded-l-xl py-3 pl-4 transition-all group-hover:bg-zinc-900/60 group-hover:border-zinc-700/50">
-                        <div className="flex items-center gap-4">
-                          <div className="w-8 h-8 rounded-lg bg-zinc-950 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden shadow-inner uppercase font-mono text-[10px] text-zinc-600">
-                            {log.profiles?.profile_picture ? (
-                              <img src={log.profiles.profile_picture} alt="Avatar" className="w-full h-full object-cover" />
-                            ) : (
-                              <User className="w-4 h-4" />
-                            )}
+                  {filteredLogs.map((log) => {
+                    const isSelected = selectedLog?.id === log.id;
+                    return (
+                      <motion.tr
+                        key={log.id}
+                        layout
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        onClick={() => setSelectedLog(log)}
+                        className="group cursor-pointer"
+                      >
+                        <td
+                          className="rounded-l-xl py-3.5 pl-4 transition-all duration-150 relative"
+                          style={{
+                            background: isSelected ? "var(--bg-active)" : "var(--bg-elevated)",
+                            borderTop: "1px solid var(--border-subtle)",
+                            borderBottom: "1px solid var(--border-subtle)"
+                          }}
+                        >
+                          {/* Active accent vertical bar */}
+                          <div className={`absolute top-0 bottom-0 left-0 w-0.5 rounded-l-xl transition-all ${
+                            isSelected ? "bg-[var(--silver-400)]" : "bg-transparent group-hover:bg-[var(--border-soft)]"
+                          }`} />
+
+                          <div className="flex items-center gap-4.5 pl-1.5">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 overflow-hidden bg-[var(--bg-active)] border border-[var(--border-subtle)]">
+                              {log.profiles?.profile_picture ? (
+                                <img src={log.profiles.profile_picture} alt="Avatar" className="w-full h-full object-cover" />
+                              ) : (
+                                <User className="w-4 h-4 text-[var(--silver-500)]" />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[11px] font-black uppercase tracking-tight font-mono text-[var(--silver-200)] group-hover:text-white transition-colors">
+                                {log.action.replace(/_/g, " ")}
+                              </p>
+                              <p className="text-[10.5px] text-[var(--silver-600)] truncate max-w-[280px] md:max-w-[360px] mt-0.5 font-medium leading-tight">
+                                {log.description}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-[10px] font-bold text-zinc-200 group-hover:text-emerald-400 transition-colors uppercase tracking-tight">
-                              {log.action.replace(/_/g, ' ')}
-                            </p>
-                            <p className="text-[9px] text-zinc-500 font-light truncate max-w-[300px]">{log.description}</p>
+                        </td>
+
+                        <td
+                          className="py-3.5 text-center transition-all duration-150"
+                          style={{
+                            background: isSelected ? "var(--bg-active)" : "var(--bg-elevated)",
+                            borderTop: "1px solid var(--border-subtle)",
+                            borderBottom: "1px solid var(--border-subtle)"
+                          }}
+                        >
+                          {(() => {
+                            const c = getCategoryColor(log.category);
+                            return (
+                              <span
+                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded border text-[7.5px] font-black uppercase tracking-widest font-mono"
+                                style={{ background: c.bg, borderColor: c.border, color: c.text }}
+                              >
+                                {getCategoryIcon(log.category)}
+                                {log.category.replace("_", " ")}
+                              </span>
+                            );
+                          })()}
+                        </td>
+
+                        <td
+                          className="rounded-r-xl py-3.5 pr-4 text-right transition-all duration-150 border-r border-[var(--border-subtle)]"
+                          style={{
+                            background: isSelected ? "var(--bg-active)" : "var(--bg-elevated)",
+                            borderTop: "1px solid var(--border-subtle)",
+                            borderBottom: "1px solid var(--border-subtle)"
+                          }}
+                        >
+                          <div className="flex flex-col items-end font-mono">
+                            <span className="text-[10px] font-bold text-[var(--silver-400)]">
+                              {new Date(log.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                            </span>
+                            <span className="text-[8px] uppercase font-black text-[var(--silver-700)] mt-0.5">
+                              {new Date(log.created_at).toLocaleDateString()}
+                            </span>
                           </div>
-                        </div>
-                      </td>
-                      <td className="bg-zinc-900/40 border-y border-zinc-800/50 py-3 text-center transition-all group-hover:bg-zinc-900/60 group-hover:border-zinc-700/50">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[7px] font-black uppercase tracking-widest ${getCategoryColor(log.category)}`}>
-                          {getCategoryIcon(log.category)}
-                          {log.category.replace('_', ' ')}
-                        </span>
-                      </td>
-                      <td className="bg-zinc-900/40 border-y border-r border-zinc-800/50 rounded-r-xl py-3 pr-4 text-right transition-all group-hover:bg-zinc-900/60 group-hover:border-zinc-700/50">
-                        <div className="flex flex-col items-end">
-                          <span className="text-[9px] font-mono text-zinc-400">
-                            {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                          </span>
-                          <span className="text-[7px] text-zinc-600 uppercase font-bold">
-                            {new Date(log.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
                 </AnimatePresence>
                 {filteredLogs.length === 0 && !isLoading && (
                   <tr>
-                    <td colSpan={3} className="py-20 text-center opacity-20">
-                       <Terminal className="w-10 h-10 mx-auto mb-4" />
-                       <p className="text-[10px] font-black uppercase tracking-widest">No matching logs found</p>
+                    <td colSpan={3} className="py-24 text-center opacity-30 select-none">
+                      <Terminal className="w-10 h-10 mx-auto mb-4 text-[var(--silver-600)]" />
+                      <p className="text-[9px] font-black uppercase tracking-widest font-mono text-[var(--silver-600)]">No matching audit logs buffered</p>
                     </td>
                   </tr>
                 )}
@@ -191,73 +237,86 @@ export default function LogsClient({ initialLogs }: LogsClientProps) {
           </div>
         </div>
 
-        {/* Detail Panel */}
+        {/* ── Right: Event Intelligence HUD ── */}
         <div className="lg:col-span-4 space-y-4 flex flex-col min-h-0">
-          <div className="glass-panel p-6 rounded-[1.5rem] flex-1 border-zinc-800/50 bg-zinc-950/20 overflow-hidden flex flex-col">
-            <h3 className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-600 mb-5 flex items-center gap-3 shrink-0">
-              <Eye className="w-3 h-3 text-emerald-500" /> Event Intelligence
-            </h3>
-            
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
+          <div className="rounded-2xl flex-1 overflow-hidden flex flex-col border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+            <div className="px-6 py-5 flex items-center gap-3 border-b border-[var(--border-subtle)] bg-[rgba(10,10,14,0.2)] shrink-0 select-none">
+              <div className="p-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-soft)]">
+                <Eye className="w-4 h-4 text-[var(--silver-400)]" />
+              </div>
+              <div>
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--silver-200)] font-mono">
+                  Log Intelligence
+                </h3>
+                <p className="text-[9px] uppercase tracking-wider text-[var(--silver-600)] font-mono">
+                  Inspect raw event variables
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
               <AnimatePresence mode="wait">
                 {selectedLog ? (
-                  <motion.div
-                    key={selectedLog.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="space-y-6"
-                  >
-                    <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl space-y-4">
+                  <motion.div key={selectedLog.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+                    <div className="p-4.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-soft)] space-y-4 font-mono select-text">
                       <div className="space-y-1">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-zinc-600">Log UUID</label>
-                        <p className="text-[8px] font-mono text-zinc-400 break-all">{selectedLog.id}</p>
+                        <label className="text-[8px] font-black uppercase tracking-widest text-[var(--silver-600)]">Event UUID</label>
+                        <p className="text-[8.5px] p-2 rounded bg-black/40 border border-[var(--border-subtle)] text-[var(--silver-400)] break-all">{selectedLog.id}</p>
                       </div>
                       
                       <div className="space-y-1">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-zinc-600">Action Context</label>
-                        <p className="text-[10px] font-bold text-white uppercase tracking-tighter leading-tight bg-zinc-800/50 p-2 rounded-lg border border-zinc-700/30">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-[var(--silver-600)]">User Context</label>
+                        <p className="text-[10px] font-extrabold text-[var(--silver-300)] break-words">
+                          {selectedLog.profiles?.user_email || "Anonymous Server Service"}
+                        </p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-[var(--silver-600)]">Description</label>
+                        <p className="text-[10px] p-3 rounded-lg bg-black/30 border border-[var(--border-subtle)] text-[var(--silver-200)] leading-relaxed">
                           {selectedLog.description}
                         </p>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-zinc-600">Metadata Payload</label>
-                        <div className="p-3 bg-black/60 rounded-xl border border-zinc-800 overflow-x-auto">
-                          <pre className="text-[9px] font-mono text-emerald-400/80 leading-relaxed">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-[var(--silver-600)]">Raw Metadata Object</label>
+                        <div className="p-3.5 rounded-xl bg-black/55 border border-[var(--border-subtle)] overflow-x-auto max-h-[160px] custom-scrollbar">
+                          <pre className="text-[9.5px] leading-relaxed text-emerald-400/80 font-mono">
                             {JSON.stringify(selectedLog.metadata, null, 2)}
                           </pre>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl">
-                      <Info className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                      <p className="text-[9px] text-zinc-500 leading-normal font-light italic">
-                        Logs are immutable and stored in the SukaMCD primary database vault.
+                    <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] select-none">
+                      <Info className="w-4 h-4 text-[var(--silver-600)] shrink-0" />
+                      <p className="text-[9.5px] font-mono uppercase text-[var(--silver-600)] leading-normal">
+                        Logs are immutable transaction hashes stored in the centralized system vault.
                       </p>
                     </div>
                   </motion.div>
                 ) : (
-                  <div className="h-full flex flex-col items-center justify-center opacity-20 py-20">
-                    <Terminal className="w-8 h-8 mb-4" />
-                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-center">Select an event to<br/>inspect metadata</p>
+                  <div className="h-full flex flex-col items-center justify-center opacity-25 py-24 select-none">
+                    <Terminal className="w-12 h-12 mb-4 text-[var(--silver-600)]" />
+                    <p className="text-[9px] font-black uppercase tracking-[0.25em] text-center font-mono text-[var(--silver-600)]">
+                      Select event node<br/>for deep inspection
+                    </p>
                   </div>
                 )}
               </AnimatePresence>
             </div>
           </div>
 
-          <div className="bg-zinc-950/40 p-5 rounded-[1.5rem] border border-zinc-900 border-dashed shrink-0">
-             <div className="flex items-center justify-between mb-3">
-               <span className="text-[8px] font-black uppercase text-zinc-700 tracking-widest flex items-center gap-2">
-                 <Clock className="w-3 h-3" /> System Health
-               </span>
-               <span className="text-[8px] font-mono text-emerald-500">OPERATIONAL</span>
-             </div>
-             <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden">
-               <div className="w-[98%] h-full bg-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-             </div>
+          <div className="p-5 rounded-2xl bg-[var(--bg-surface)] border border-dashed border-[var(--border-soft)] shrink-0 select-none">
+            <div className="flex items-center justify-between mb-3.5">
+              <span className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2 font-mono text-[var(--silver-600)]">
+                <Clock className="w-3.5 h-3.5 text-[var(--silver-500)]" /> Pipeline Health
+              </span>
+              <span className="text-[8px] font-mono text-emerald-400 font-bold tracking-widest">STABLE OPERATIONAL</span>
+            </div>
+            <div className="w-full h-1 rounded-full bg-[var(--bg-active)] overflow-hidden">
+              <div className="w-[99%] h-full bg-emerald-500 rounded-full" />
+            </div>
           </div>
         </div>
       </div>

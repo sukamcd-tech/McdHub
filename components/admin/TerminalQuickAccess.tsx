@@ -19,10 +19,10 @@ export default function TerminalQuickAccess() {
           fontFamily: "'Fira Code', monospace",
           fontSize: 11,
           theme: {
-            background: "#000000",
+            background: "#121214",
             foreground: "#fafafa",
             cursor: "#10b981",
-            selectionBackground: "rgba(255, 255, 255, 0.2)",
+            selectionBackground: "rgba(255, 255, 255, 0.1)",
           },
           allowProposedApi: true,
         });
@@ -76,7 +76,7 @@ export default function TerminalQuickAccess() {
   }, []);
 
   return (
-    <div className="w-full h-full bg-black p-4 overflow-hidden">
+    <div className="w-full h-full bg-[#121214] p-4 overflow-hidden">
       <div ref={terminalRef} className="w-full h-full" />
     </div>
   );

@@ -1,28 +1,78 @@
 @import "tailwindcss";
 
+/* ============================================================
+   SUKAMCD ADMIN DESIGN SYSTEM v3.0
+   Theme: Deep Charcoal × Silver
+   ============================================================ */
+
 :root {
-  --background: #000000;
-  --foreground: #ffffff;
+  /* Base Surfaces */
+  --bg-root:      #0f0f13;
+  --bg-surface:   #141418;
+  --bg-elevated:  #1c1c22;
+  --bg-hover:     #212128;
+  --bg-active:    #26262f;
+
+  /* Silver Accent System */
+  --silver-100:   #f4f4f6;
+  --silver-200:   #e4e4e8;
+  --silver-300:   #d4d4d8;
+  --silver-400:   #a1a1aa;
+  --silver-500:   #71717a;
+  --silver-600:   #52525b;
+  --silver-700:   #3f3f46;
+  --silver-glow:  rgba(212, 212, 216, 0.15);
+  --silver-glow-sm: rgba(212, 212, 216, 0.08);
+
+  /* Status Colors */
+  --emerald:      #10b981;
+  --emerald-glow: rgba(16, 185, 129, 0.2);
+  --crimson:      #ef4444;
+  --crimson-glow: rgba(239, 68, 68, 0.2);
+  --amber:        #f59e0b;
+  --amber-glow:   rgba(245, 158, 11, 0.2);
+
+  /* Border Tokens */
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-soft:   rgba(255, 255, 255, 0.07);
+  --border-med:    rgba(255, 255, 255, 0.12);
+  --border-silver: rgba(212, 212, 216, 0.15);
+
+  /* Sidebar Width Tokens */
+  --sidebar-expanded: 256px;
+  --sidebar-collapsed: 64px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --color-background: var(--bg-root);
+  --color-foreground: var(--silver-100);
+  --font-sans: "Outfit", var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", "Fira Code", monospace;
+}
+
+/* ============================================================
+   BASE RESET
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-inter), sans-serif;
+  background: var(--bg-root);
+  color: var(--silver-100);
+  font-family: "Outfit", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom Scrollbar */
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -30,35 +80,342 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
+  background: rgba(212, 212, 216, 0.08);
+  border-radius: 99px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(212, 212, 216, 0.18);
 }
 
-.glass {
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+/* ============================================================
+   PANEL & SURFACE CLASSES
+   ============================================================ */
+
+/* Primary glass panel */
+.panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Legacy alias */
+.premium-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 4px 24px rgba(0, 0, 0, 0.5);
 }
 
 .glass-panel {
-  background: rgba(9, 9, 11, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(39, 39, 42, 0.5);
+  background: rgba(20, 20, 24, 0.85);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid var(--border-soft);
 }
 
-.project-card:hover {
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
+/* Elevated surface for modals */
+.panel-elevated {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 20px 60px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
 }
+
+/* Silver bordered accent panel */
+.panel-silver {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-silver);
+  box-shadow:
+    inset 0 1px 0 rgba(212, 212, 216, 0.05),
+    0 4px 24px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(212, 212, 216, 0.04);
+}
+
+/* ============================================================
+   INTERACTIVE CARD
+   ============================================================ */
+
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-silver);
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(212, 212, 216, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Legacy alias */
+.interactive-card {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.interactive-card:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-silver);
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(212, 212, 216, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* ============================================================
+   BUTTON SYSTEM
+   ============================================================ */
+
+/* Primary: Silver-white */
+.btn-primary {
+  background: var(--silver-200);
+  color: #0f0f13;
+  border: 1px solid var(--silver-300);
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.6875rem;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: var(--silver-100);
+  box-shadow: 0 0 20px var(--silver-glow);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+/* Ghost */
+.btn-ghost {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border-subtle);
+  color: var(--silver-400);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.6875rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-silver);
+  color: var(--silver-200);
+}
+
+/* Danger */
+.btn-danger {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.6875rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.18);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.15);
+}
+
+/* ============================================================
+   INPUT SYSTEM
+   ============================================================ */
+
+.premium-input {
+  background: rgba(10, 10, 14, 0.8);
+  border: 1px solid var(--border-soft);
+  color: var(--silver-200);
+  transition: all 0.2s ease;
+}
+
+.premium-input::placeholder {
+  color: var(--silver-600);
+}
+
+.premium-input:focus {
+  border-color: var(--border-silver);
+  outline: none;
+  background: rgba(15, 15, 19, 0.9);
+  box-shadow: 0 0 0 3px rgba(212, 212, 216, 0.06);
+}
+
+/* ============================================================
+   STATUS BADGE SYSTEM
+   ============================================================ */
+
+.badge-online {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #10b981;
+}
+
+.badge-offline {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+}
+
+.badge-maintenance {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #f59e0b;
+}
+
+/* ============================================================
+   GLOW UTILITIES
+   ============================================================ */
+
+.glow-silver {
+  box-shadow: 0 0 16px var(--silver-glow);
+}
+
+.glow-mint {
+  box-shadow: 0 0 12px var(--emerald-glow);
+}
+
+.glow-crimson {
+  box-shadow: 0 0 12px var(--crimson-glow);
+}
+
+.glow-amber {
+  box-shadow: 0 0 12px var(--amber-glow);
+}
+
+/* ============================================================
+   SIDEBAR TRANSITIONS
+   ============================================================ */
+
+.sidebar-expanded {
+  width: var(--sidebar-expanded);
+}
+
+.sidebar-collapsed {
+  width: var(--sidebar-collapsed);
+}
+
+.sidebar-transition {
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ============================================================
+   ANIMATIONS & KEYFRAMES
+   ============================================================ */
+
+@keyframes silver-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 212, 216, 0.3); }
+  50%       { box-shadow: 0 0 0 6px rgba(212, 212, 216, 0); }
+}
+
+@keyframes emerald-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  50%       { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+}
+
+@keyframes scan-sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+
+.animate-silver-pulse { animation: silver-pulse 2s ease-in-out infinite; }
+.animate-emerald-pulse { animation: emerald-pulse 2s ease-in-out infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+
+/* ============================================================
+   SILVER ACCENT LINE
+   ============================================================ */
+
+/* Top accent border for panels */
+.accent-top::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,212,216,0.3), transparent);
+}
+
+/* ============================================================
+   ACTIVE NAV INDICATOR
+   ============================================================ */
+
+.nav-active-bar {
+  position: absolute;
+  left: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--silver-300);
+  box-shadow: 0 0 8px var(--silver-glow);
+}
+
+/* ============================================================
+   MISC UTILITIES
+   ============================================================ */
+
+.divider {
+  width: 1px;
+  background: var(--border-subtle);
+}
+
+.dot-online {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--emerald);
+  box-shadow: 0 0 6px var(--emerald-glow);
+}
+
+.dot-offline {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--crimson);
+}
+
+.dot-maintenance {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+}
+
+/* Legacy compat */
+.glass { background: var(--bg-elevated); border: 1px solid var(--border-subtle); }
+.project-card:hover { border-color: var(--border-silver); background: var(--bg-elevated); }
 
 @layer utilities {
   .text-gradient {
-    background: linear-gradient(to bottom, #ffffff, #a1a1aa, #3f3f46);
+    background: linear-gradient(135deg, var(--silver-100), var(--silver-300));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }

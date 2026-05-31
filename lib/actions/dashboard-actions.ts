@@ -13,6 +13,9 @@ export async function getDashboardStats(): Promise<{
       gdrive: boolean;
       ai: boolean;
     };
+    bugCount: number;
+    saranCount: number;
+    recentFeedbacks: any[];
   };
   error?: string;
 }> {
@@ -32,7 +35,18 @@ export async function getDashboardStats(): Promise<{
       .eq('category', 'SECURITY')
       .gt('created_at', yesterday);
 
-    // 3. System Integrity Check (ENVs)
+    // 3. Get open feedback counts (bugs and suggestions)
+    const [
+      { count: bugCount },
+      { count: saranCount },
+      { data: recentFeedbacks }
+    ] = await Promise.all([
+      supabase.from('feedbacks').select('*', { count: 'exact', head: true }).eq('type', 'bug').eq('status', 'open'),
+      supabase.from('feedbacks').select('*', { count: 'exact', head: true }).eq('type', 'saran').eq('status', 'open'),
+      supabase.from('feedbacks').select('*').order('created_at', { ascending: false }).limit(4)
+    ]);
+
+    // 4. System Integrity Check (ENVs)
     const integrity = {
       supabase: !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       gdrive: !!process.env.GOOGLE_DRIVE_FOLDER_ID && !!process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
@@ -47,7 +61,10 @@ export async function getDashboardStats(): Promise<{
         totalBackups: totalBackups || 0,
         securityAlerts: securityAlerts || 0,
         systemStatus: isHealthy ? 'Stable' : 'Degraded',
-        integrityInfo: integrity
+        integrityInfo: integrity,
+        bugCount: bugCount || 0,
+        saranCount: saranCount || 0,
+        recentFeedbacks: recentFeedbacks || []
       }
     };
   } catch (error) {
