@@ -69,7 +69,6 @@ function OrderFormContent() {
   const [email, setEmail] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
-  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [whatsapp, setWhatsapp] = useState("");
   const [description, setDescription] = useState("");
@@ -102,16 +101,24 @@ function OrderFormContent() {
 
   useEffect(() => {
     async function checkAuth() {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        router.push(`/gateway?redirect=${encodeURIComponent(`/pricing/order?package=${packageParam}`)}`);
-        return;
-      }
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) {
+          // Redirect immediately tanpa delay
+          router.replace(`/gateway?redirect=${encodeURIComponent(`/pricing/order?package=${packageParam}`)}`);
+          return;
+        }
 
-      setIsLoggedIn(true);
-      setAuthChecked(true);
-      if (!email && data.session.user.email) {
-        setEmail(data.session.user.email);
+        setIsLoggedIn(true);
+        if (!email && data.session.user.email) {
+          setEmail(data.session.user.email);
+        }
+      } catch (err) {
+        console.error('Auth check error:', err);
+        router.replace(`/gateway?redirect=${encodeURIComponent(`/pricing/order?package=${packageParam}`)}`);
+        return;
+      } finally {
+        setAuthChecked(true);
       }
     }
 
@@ -119,6 +126,18 @@ function OrderFormContent() {
   }, [packageParam, router, supabase, email]);
 
   const currentPlan = plans[selectedPlanId as keyof typeof plans] || plans.static;
+
+  // Double-check: jika sudah dicek tapi tidak login, jangan tampilkan apa-apa (redirect sudah dijalan)
+  if (authChecked && !isLoggedIn) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center text-center text-sm text-[var(--silver-500)]">
+        <div>
+          <p>Mengalihkan ke halaman login...</p>
+          <p className="text-xs mt-2">Silakan tunggu atau <a href="/gateway" className="text-[var(--silver-300)] hover:text-white underline">klik di sini</a>.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!authChecked) {
     return (

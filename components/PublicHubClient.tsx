@@ -106,22 +106,41 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
   const currentYear = new Date().getFullYear();
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
-    async function loadSession() {
-      const { data } = await supabase.auth.getSession();
-      setIsLoggedIn(!!data.session);
+    let isMounted = true;
+
+    async function initializeAuth() {
+      try {
+        // First, try to get the current session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (isMounted) {
+          setIsLoggedIn(!!session);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Error loading session:', error);
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
     }
 
-    loadSession();
+    initializeAuth();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session);
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isMounted) {
+        setIsLoggedIn(!!session);
+      }
     });
 
     return () => {
-      listener?.subscription.unsubscribe();
+      isMounted = false;
+      subscription?.unsubscribe();
     };
   }, [supabase]);
 
