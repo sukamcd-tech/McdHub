@@ -227,3 +227,38 @@ CREATE POLICY "Admin can access all orders"
       WHERE profiles.id = auth.uid() AND profiles.role = 'admin'
     )
   );
+
+-- Add promo_code column to orders
+ALTER TABLE public.orders ADD COLUMN promo_code TEXT;
+
+-- =====================================================
+-- 8. PROMO CODES - Discount & Promo Codes
+-- =====================================================
+CREATE TABLE public.promo_codes (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code        TEXT UNIQUE NOT NULL,
+  benefit     TEXT NOT NULL,
+  is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+  start_date  TIMESTAMPTZ,
+  end_date    TIMESTAMPTZ,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE public.promo_codes ENABLE ROW LEVEL SECURITY;
+
+-- Security Policies
+CREATE POLICY "Anyone authenticated can view active promo codes"
+  ON public.promo_codes FOR SELECT
+  USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Admin can manage promo codes"
+  ON public.promo_codes FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = auth.uid() AND profiles.role = 'admin'
+    )
+  );
+

@@ -28,7 +28,7 @@ const plans = [
       "Animasi Halus & Interaktif (Framer Motion)",
       "Integrasi Form Kontak (ke Email/WhatsApp)",
       "SEO Dasar & Kecepatan Akses Super Cepat",
-      "Domain .my.id & Hosting Gratis (1 Tahun)",
+      "Domain .web.id & Hosting Gratis (1 Tahun)",
     ],
   },
   {
@@ -43,7 +43,7 @@ const plans = [
       "Fitur CRUD Lengkap sesuai Kebutuhan",
       "Tech Stack: PHP/Laravel/CodeIgniter atau Fullstack JS",
       "Integrasi Database (MySQL / PostgreSQL)",
-      "Domain .my.id & Hosting Gratis (1 Tahun)",
+      "Domain .web.id & Hosting Gratis (1 Tahun)",
     ],
     popular: true,
   },
@@ -59,7 +59,7 @@ const plans = [
       "Integrasi API & Database Lokal",
       "UI/UX Modern & Responsif untuk Tablet & HP",
       "Notifikasi Push & Fitur Offline (Opsional)",
-      "Domain .my.id & Hosting API Gratis (1 Tahun)",
+      "Domain .web.id & Hosting API Gratis (1 Tahun)",
     ],
   },
   {
@@ -74,7 +74,7 @@ const plans = [
       "Multi-platform Integration (Terhubung ke Mobile/API)",
       "Dasbor Analitik & Laporan Interaktif",
       "Keamanan Tinggi & Enkripsi Data Sensitif",
-      "Domain .my.id & Hosting Cloud Server (1 Tahun)",
+      "Domain .com / .co.id & Hosting Cloud Server (1 Tahun)",
     ],
   },
 ];
@@ -82,8 +82,8 @@ const plans = [
 const policies = [
   {
     icon: Globe,
-    title: "Hosting & Domain .my.id",
-    desc: "Semua paket sudah termasuk sewa hosting & domain .my.id selama 1 tahun secara gratis. Untuk custom domain (.com, .co.id, dll) ada biaya tambahan.",
+    title: "Hosting & Domain .web.id",
+    desc: "Semua paket sudah termasuk sewa hosting & domain .web.id selama 1 tahun secara gratis. Untuk custom domain (.com, .co.id, dll) ada biaya tambahan.",
   },
   {
     icon: RefreshCw,
@@ -120,6 +120,16 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
         if (isMounted) {
           setIsLoggedIn(!!session);
           setIsLoading(false);
+        }
+
+        // Clean up OAuth query parameters from URL once session is resolved
+        if (typeof window !== "undefined") {
+          const url = new URL(window.location.href);
+          if (url.searchParams.has("code") || url.searchParams.has("state")) {
+            url.searchParams.delete("code");
+            url.searchParams.delete("state");
+            window.history.replaceState({}, document.title, url.pathname + url.search);
+          }
         }
       } catch (error) {
         console.error('Error loading session:', error);

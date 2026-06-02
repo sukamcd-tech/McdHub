@@ -3,11 +3,11 @@
 import React, { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Send, Loader2, CheckCircle, Globe, Smartphone, ShieldCheck, RefreshCw } from "lucide-react";
+import { ArrowLeft, Send, Loader2, CheckCircle, Globe, Smartphone, ShieldCheck, RefreshCw, AlertCircle, Check } from "lucide-react";
 import { createClient, createMobileClient } from "@/lib/supabase";
 
 // SILAKAN UBAH NOMOR WHATSAPP DI SINI (Gunakan kode negara, tanpa '+' atau '0' di depan. Contoh: 6281234567890)
-const WHATSAPP_NUMBER = "6281234567890";
+const WHATSAPP_NUMBER = "6288905588200";
 
 const plans = {
   static: {
@@ -16,7 +16,7 @@ const plans = {
     price: "Rp 500rb - 750rb",
     description: "1–5 Halaman (Home, About, Contact). Responsive, animasi halus, integrasi form ke email/WhatsApp.",
     addons: [
-      { id: "custom_domain", label: "Custom Domain (.com, .co.id, dll.)", desc: "Menggunakan domain pilihan Anda alih-alih .my.id" },
+      { id: "custom_domain", label: "Custom Domain (.com, .co.id, dll.)", desc: "Menggunakan domain pilihan Anda alih-alih .web.id" },
     ]
   },
   "web-biasa": {
@@ -25,7 +25,7 @@ const plans = {
     price: "Rp 2,0jt - 2,5jt",
     description: "Web CMS, blog, atau portal berita sederhana dengan Admin Panel. Menggunakan PHP/Laravel/CI atau Fullstack modern.",
     addons: [
-      { id: "custom_domain", label: "Custom Domain (.com, .co.id, dll.)", desc: "Menggunakan domain pilihan Anda alih-alih .my.id" },
+      { id: "custom_domain", label: "Custom Domain (.com, .co.id, dll.)", desc: "Menggunakan domain pilihan Anda alih-alih .web.id" },
     ]
   },
   "android-app": {
@@ -34,7 +34,7 @@ const plans = {
     price: "Rp 2,5jt - 5,0jt",
     description: "Aplikasi fungsional (bukan sekadar web-view). Integrasi API, lokal database, UI/UX modern.",
     addons: [
-      { id: "custom_domain", label: "Custom Domain untuk API/Admin Panel", desc: "Menggunakan domain pilihan Anda alih-alih .my.id untuk backend" },
+      { id: "custom_domain", label: "Custom Domain untuk API/Admin Panel", desc: "Menggunakan domain pilihan Anda alih-alih .web.id untuk backend" },
       { id: "playstore", label: "Rilis ke Google Play Store", desc: "Bantuan pendaftaran dan rilis penuh di toko aplikasi Google Play" },
     ]
   },
@@ -44,9 +44,31 @@ const plans = {
     price: "Rp 5,0jt - 10,0jt",
     description: "Sistem manajemen bisnis terintegrasi (stok, keuangan, SDM, atau absensi). Kompleksitas tinggi, role-based access.",
     addons: [
-      { id: "custom_domain", label: "Custom Domain (.com, .co.id, dll.)", desc: "Menggunakan domain pilihan Anda alih-alih .my.id" },
       { id: "playstore", label: "Aplikasi Pendamping Android (Rilis Play Store)", desc: "Menambahkan dan merilis aplikasi pendamping Android untuk staff/klien ke Play Store" },
     ]
+  },
+  "erp-android": {
+    id: "erp-android",
+    name: "Sistem ERP + Android Native",
+    price: "Rp 7,5jt - 15,0jt",
+    description: "Kombinasi sistem ERP berbasis web dengan aplikasi Android native terintegrasi penuh.",
+    addons: [
+      { id: "playstore", label: "Rilis ke Google Play Store", desc: "Bantuan pendaftaran dan rilis penuh di toko aplikasi Google Play" },
+    ]
+  },
+  "erp-monthly-basic": {
+    id: "erp-monthly-basic",
+    name: "ERP Bulanan - Basic (UMKM)",
+    price: "Rp 150rb / bulan",
+    description: "Hak akses sistem ERP cloud khusus UMKM. Efisien, cepat, dan siap pakai.",
+    addons: []
+  },
+  "erp-monthly-prof": {
+    id: "erp-monthly-prof",
+    name: "ERP Bulanan - Profesional",
+    price: "Rp 350rb / bulan",
+    description: "Akses penuh modul ERP cloud dengan kapasitas pengguna tanpa batas untuk bisnis Anda.",
+    addons: []
   },
   student: {
     id: "student",
@@ -54,7 +76,7 @@ const plans = {
     price: "Diskon s.d 30%",
     description: "Tugas akhir, skripsi, portfolio kelulusan, atau website organisasi sekolah/kampus. Tunjukkan Kartu Pelajar / KTM aktif.",
     addons: [
-      { id: "custom_domain", label: "Custom Domain (.com, .co.id, dll.)", desc: "Menggunakan domain pilihan Anda alih-alih .my.id" },
+      { id: "custom_domain", label: "Custom Domain (.com, .co.id, dll.)", desc: "Menggunakan domain pilihan Anda alih-alih .web.id" },
     ]
   }
 };
@@ -92,6 +114,62 @@ function OrderFormContent() {
 
   const [studentType, setStudentType] = useState("Tugas Akhir / Skripsi / Thesis");
   const [studentTech, setStudentTech] = useState("");
+  const [erpIndustry, setErpIndustry] = useState("Retail / Toko Kelontong");
+  const [erpDomainExtension, setErpDomainExtension] = useState(".com");
+
+  // Promo Code State
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; benefit: string } | null>(null);
+  const [promoError, setPromoError] = useState("");
+  const [promoValidating, setPromoValidating] = useState(false);
+
+  const handleApplyPromo = async () => {
+    if (!promoInput.trim()) return;
+    setPromoValidating(true);
+    setPromoError("");
+
+    try {
+      const { data, error } = await supabase
+        .from("promo_codes")
+        .select("*")
+        .eq("code", promoInput.trim().toUpperCase())
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        const now = new Date();
+        if (data.start_date && new Date(data.start_date) > now) {
+          setPromoError("Kode diskon belum dimulai.");
+          return;
+        }
+        if (data.end_date && new Date(data.end_date) < now) {
+          setPromoError("Kode diskon sudah kedaluwarsa.");
+          return;
+        }
+
+        setAppliedPromo({
+          code: data.code,
+          benefit: data.benefit
+        });
+        setPromoError("");
+      } else {
+        setPromoError("Kode diskon tidak valid atau sudah tidak aktif.");
+      }
+    } catch (err) {
+      console.error("Error validating promo code:", err);
+      setPromoError("Terjadi kesalahan sistem saat memvalidasi kode.");
+    } finally {
+      setPromoValidating(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoInput("");
+    setPromoError("");
+  };
 
   useEffect(() => {
     if (packageParam && plans[packageParam as keyof typeof plans]) {
@@ -112,6 +190,16 @@ function OrderFormContent() {
         setIsLoggedIn(true);
         if (!email && data.session.user.email) {
           setEmail(data.session.user.email);
+        }
+
+        // Clean up OAuth query parameters from URL once session is resolved
+        if (typeof window !== "undefined") {
+          const url = new URL(window.location.href);
+          if (url.searchParams.has("code") || url.searchParams.has("state")) {
+            url.searchParams.delete("code");
+            url.searchParams.delete("state");
+            window.history.replaceState({}, document.title, url.pathname + url.search);
+          }
         }
       } catch (err) {
         console.error('Auth check error:', err);
@@ -176,7 +264,15 @@ function OrderFormContent() {
     }
     if (selectedPlanId === "web-erp") {
       const modulesStr = erpModules.length > 0 ? erpModules.join(", ") : "-";
-      return `${bold}Modul ERP:${bold} ${modulesStr}${newline}${bold}Akses Sistem:${bold} ${erpAccess}`;
+      return `${bold}Modul ERP:${bold} ${modulesStr}${newline}${bold}Akses Sistem:${bold} ${erpAccess}${newline}${bold}Pilihan Domain:${bold} ${erpDomainExtension}`;
+    }
+    if (selectedPlanId === "erp-android") {
+      const modulesStr = erpModules.length > 0 ? erpModules.join(", ") : "-";
+      const featuresStr = androidFeatures.length > 0 ? androidFeatures.join(", ") : "-";
+      return `${bold}Modul ERP:${bold} ${modulesStr}${newline}${bold}Fitur Android:${bold} ${featuresStr}${newline}${bold}Pilihan Domain:${bold} ${erpDomainExtension}`;
+    }
+    if (selectedPlanId === "erp-monthly-basic" || selectedPlanId === "erp-monthly-prof") {
+      return `${bold}Sektor Industri:${bold} ${erpIndustry}`;
     }
     if (selectedPlanId === "student") {
       return `${bold}Jenis Tugas:${bold} ${studentType}${newline}${bold}Ketentuan Tech Stack:${bold} ${studentTech || "Bebas"}`;
@@ -208,6 +304,10 @@ function OrderFormContent() {
           }).join("\n")
         : "- Tidak ada add-on dipilih";
 
+      const promoText = appliedPromo 
+        ? `${appliedPromo.code} (${appliedPromo.benefit})` 
+        : "- Tidak ada kode diskon digunakan";
+
       const formattedDescription = `[Pemesanan Paket Website/App]
 Paket Pilihan: ${currentPlan.name}
 Nama Pelanggan: ${name}
@@ -220,12 +320,15 @@ ${getSpecSummary(false)}
 Add-ons Terpilih:
 ${addOnsText}
 
+Kode Diskon:
+${promoText}
+
 Deskripsi Kebutuhan Proyek:
 ${description}
 
 ---
 Ketentuan Umum:
-- Free hosting & domain .my.id (1 Tahun)
+- Free hosting & domain .web.id (1 Tahun)
 - Free revisi tampilan 2x
 - Garansi Bug/Error 3 Bulan`;
 
@@ -249,6 +352,7 @@ Ketentuan Umum:
             specs: getSpecSummary(false),
             addons: selectedAddons,
             description: description,
+            promo_code: appliedPromo ? appliedPromo.code : null,
             status: "pending",
             created_at: new Date().toISOString()
           }
@@ -275,7 +379,11 @@ Ketentuan Umum:
         }).join("%0A")
       : "- Tidak ada add-on dipilih";
 
-    const text = `Halo SukaMCD,%0A%0ASaya ingin memesan paket pengembangan website/aplikasi dengan detail berikut:%0A%0A*Paket:* ${currentPlan.name}%0A*Nama:* ${name}%0A*Email:* ${email}%0A*No. WhatsApp:* ${whatsapp}%0A%0A*Spesifikasi Detail Paket:*%0A${getSpecSummary(true)}%0A%0A*Add-ons Terpilih:*%0A${addOnsText}%0A%0A*Deskripsi Kebutuhan:*%0A${encodeURIComponent(description)}%0A%0AMohon info kelanjutan proyek ini. Terima kasih!`;
+    const promoText = appliedPromo 
+      ? `*${appliedPromo.code}* (${appliedPromo.benefit})` 
+      : "- Tidak ada";
+
+    const text = `Halo SukaMCD,%0A%0ASaya ingin memesan paket pengembangan website/aplikasi dengan detail berikut:%0A%0A*Paket:* ${currentPlan.name}%0A*Nama:* ${name}%0A*Email:* ${email}%0A*No. WhatsApp:* ${whatsapp}%0A%0A*Spesifikasi Detail Paket:*%0A${getSpecSummary(true)}%0A%0A*Add-ons Terpilih:*%0A${addOnsText}%0A%0A*Kode Diskon:* ${promoText}%0A%0A*Deskripsi Kebutuhan:*%0A${encodeURIComponent(description)}%0A%0AMohon info kelanjutan proyek ini. Terima kasih!`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, "_blank");
   };
 
@@ -368,7 +476,7 @@ Ketentuan Umum:
           <ul className="space-y-3 text-[11px] text-[var(--silver-500)] font-light leading-relaxed">
             <li className="flex gap-2.5 items-start">
               <Globe className="w-3.5 h-3.5 text-[var(--silver-400)] shrink-0 mt-0.5" />
-              <span>Free Hosting & domain <strong className="text-[var(--silver-300)]">.my.id</strong> untuk 1 tahun pertama.</span>
+              <span>Free Hosting & domain <strong className="text-[var(--silver-300)]">.web.id</strong> untuk 1 tahun pertama.</span>
             </li>
             <li className="flex gap-2.5 items-start">
               <RefreshCw className="w-3.5 h-3.5 text-[var(--silver-400)] shrink-0 mt-0.5" />
@@ -409,7 +517,7 @@ Ketentuan Umum:
                 readOnly
                 required
                 className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-[var(--bg-surface)] border border-[var(--border-soft)] text-[var(--silver-500)] focus:outline-none transition-all duration-200 placeholder-[var(--silver-700)] cursor-default caret-transparent opacity-70"
-                placeholder="you@email.com"
+                placeholder="you@sukamcd.tech"
               />
             </div>
           </div>
@@ -614,6 +722,110 @@ Ketentuan Umum:
                     <option value="Multi-Cabang / Multi-Gudang Terintegrasi">Multi-Cabang / Multi-Gudang Terintegrasi</option>
                   </select>
                 </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-[9px] font-mono uppercase tracking-widest text-[var(--silver-600)]">Pilihan Ekstensi Domain</label>
+                  <select
+                    value={erpDomainExtension}
+                    onChange={(e) => setErpDomainExtension(e.target.value)}
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-surface)] border border-[var(--border-soft)] text-[var(--silver-200)] focus:outline-none focus:border-[var(--border-silver)] cursor-pointer"
+                  >
+                    <option value=".com">.com (Internasional / Bisnis Umum)</option>
+                    <option value=".co.id">.co.id (Resmi Perusahaan Indonesia - Perlu SIUP/NIB)</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* 4b. ERP + Android Specs */}
+            {selectedPlanId === "erp-android" && (
+              <div className="space-y-4 animate-in fade-in duration-300">
+                <div className="space-y-2">
+                  <label className="block text-[9px] font-mono uppercase tracking-widest text-[var(--silver-600)]">Modul ERP yang Diperlukan</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[var(--silver-300)]">
+                    {[
+                      "Manajemen Inventaris / Gudang",
+                      "Keuangan, Akuntansi & Pembukuan",
+                      "SDM, Kepegawaian & Penggajian (HRIS)",
+                      "Customer Relationship Management (CRM)",
+                      "Modul Pembelian & Penjualan (Purchasing/Sales)",
+                    ].map((module) => {
+                      const isChecked = erpModules.includes(module);
+                      return (
+                        <div
+                          key={module}
+                          onClick={() => handleCheckboxToggle(module, erpModules, setErpModules)}
+                          className="flex items-center gap-2 p-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] cursor-pointer hover:border-[var(--border-soft)] select-none"
+                        >
+                          <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${isChecked ? "bg-[var(--silver-200)] border-[var(--silver-200)] text-black" : "border-[var(--border-soft)]"}`}>
+                            {isChecked && <svg className="w-2.5 h-2.5 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M5 13l4 4L19 7" /></svg>}
+                          </div>
+                          <span className="text-[11px] font-medium leading-none">{module}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-[9px] font-mono uppercase tracking-widest text-[var(--silver-600)]">Fitur Mobile Android Native</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[var(--silver-300)]">
+                    {[
+                      "Push Notifications",
+                      "GPS & Google Maps Integration",
+                      "Akses Kamera & Barcode Scanner",
+                      "Database Lokal (Mode Offline)",
+                      "Biometric Auth (Sidik Jari / FaceID)",
+                    ].map((feature) => {
+                      const isChecked = androidFeatures.includes(feature);
+                      return (
+                        <div
+                          key={feature}
+                          onClick={() => handleCheckboxToggle(feature, androidFeatures, setAndroidFeatures)}
+                          className="flex items-center gap-2 p-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] cursor-pointer hover:border-[var(--border-soft)] select-none"
+                        >
+                          <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${isChecked ? "bg-[var(--silver-200)] border-[var(--silver-200)] text-black" : "border-[var(--border-soft)]"}`}>
+                            {isChecked && <svg className="w-2.5 h-2.5 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M5 13l4 4L19 7" /></svg>}
+                          </div>
+                          <span className="text-[11px] font-medium leading-none">{feature}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-[9px] font-mono uppercase tracking-widest text-[var(--silver-600)]">Pilihan Ekstensi Domain</label>
+                  <select
+                    value={erpDomainExtension}
+                    onChange={(e) => setErpDomainExtension(e.target.value)}
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-surface)] border border-[var(--border-soft)] text-[var(--silver-200)] focus:outline-none focus:border-[var(--border-silver)] cursor-pointer"
+                  >
+                    <option value=".com">.com (Internasional / Bisnis Umum)</option>
+                    <option value=".co.id">.co.id (Resmi Perusahaan Indonesia - Perlu SIUP/NIB)</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* 4c. ERP Monthly Specs (Basic & Pro) */}
+            {(selectedPlanId === "erp-monthly-basic" || selectedPlanId === "erp-monthly-prof") && (
+              <div className="space-y-4 animate-in fade-in duration-300">
+                <div className="space-y-1.5">
+                  <label className="block text-[9px] font-mono uppercase tracking-widest text-[var(--silver-600)]">Sektor Industri / Jenis Bisnis</label>
+                  <select
+                    value={erpIndustry}
+                    onChange={(e) => setErpIndustry(e.target.value)}
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-surface)] border border-[var(--border-soft)] text-[var(--silver-200)] focus:outline-none focus:border-[var(--border-silver)] cursor-pointer"
+                  >
+                    <option value="Retail / Toko Kelontong">Retail / Toko Kelontong</option>
+                    <option value="F&B / Restoran & Kafe">F&B / Restoran & Kafe</option>
+                    <option value="Jasa / Pelayanan">Jasa / Pelayanan</option>
+                    <option value="Distributor / Grosir">Distributor / Grosir</option>
+                    <option value="Manufaktur / Pabrik Kecil">Manufaktur / Pabrik Kecil</option>
+                    <option value="Lainnya">Lainnya (Tulis detail di bawah)</option>
+                  </select>
+                </div>
               </div>
             )}
 
@@ -705,6 +917,66 @@ Ketentuan Umum:
               className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-[var(--bg-surface)] border border-[var(--border-soft)] text-[var(--silver-100)] focus:border-[var(--border-silver)] focus:outline-none focus:bg-[var(--bg-elevated)] transition-all duration-200 placeholder-[var(--silver-700)] resize-none leading-relaxed"
               placeholder="Jelaskan secara singkat fitur utama, jenis bisnis, atau kebutuhan spesifik sistem Anda..."
             />
+          </div>
+
+          {/* Kode Diskon Section */}
+          <div className="space-y-2">
+            <label className="block text-[9px] font-mono uppercase tracking-widest text-[var(--silver-600)]">
+              Kode Diskon (Opsional)
+            </label>
+            <div className="flex gap-2.5">
+              <div className="relative flex-grow">
+                <input
+                  type="text"
+                  value={promoInput}
+                  onChange={(e) => {
+                    setPromoInput(e.target.value.toUpperCase());
+                    setPromoError("");
+                  }}
+                  disabled={!!appliedPromo || promoValidating}
+                  className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[var(--bg-surface)] border border-[var(--border-soft)] text-[var(--silver-100)] focus:border-[var(--border-silver)] focus:outline-none focus:bg-[var(--bg-elevated)] transition-all duration-200 placeholder-[var(--silver-700)] font-mono uppercase tracking-wider disabled:opacity-50"
+                  placeholder="CONTOH: DISKON50"
+                />
+                {appliedPromo && (
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                    <CheckCircle className="w-4 h-4 text-emerald-400" />
+                  </div>
+                )}
+              </div>
+
+              {appliedPromo ? (
+                <button
+                  type="button"
+                  onClick={handleRemovePromo}
+                  className="px-4 py-2.5 rounded-xl border border-rose-500/30 hover:border-rose-500 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 text-[10px] font-mono tracking-widest uppercase transition-all duration-200 cursor-pointer"
+                >
+                  Hapus
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleApplyPromo}
+                  disabled={!promoInput.trim() || promoValidating}
+                  className="px-5 py-2.5 rounded-xl bg-[var(--silver-200)] text-[#0f0f13] hover:bg-[var(--silver-100)] disabled:opacity-50 disabled:cursor-not-allowed text-[10px] font-mono tracking-widest uppercase transition-all duration-200 cursor-pointer"
+                >
+                  {promoValidating ? "..." : "Terapkan"}
+                </button>
+              )}
+            </div>
+
+            {/* Error or Success Feedback */}
+            {promoError && (
+              <p className="text-[10px] text-rose-400 flex items-center gap-1.5 mt-1 font-mono">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                {promoError}
+              </p>
+            )}
+            {appliedPromo && (
+              <p className="text-[10px] text-emerald-400 flex items-center gap-1.5 mt-1 font-mono">
+                <Check className="w-3.5 h-3.5 shrink-0" />
+                Benefit Terpasang: <strong className="text-white">{appliedPromo.benefit}</strong>
+              </p>
+            )}
           </div>
 
           <button

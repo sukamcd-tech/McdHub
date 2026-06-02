@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ShoppingBag,
+  Ticket,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -28,6 +29,7 @@ const navigationGroups = [
       { name: "Dashboard", href: "/admin/dashboard", icon: LayoutGrid },
       { name: "Orders", href: "/admin/orders", icon: ShoppingBag },
       { name: "Projects", href: "/admin/projects", icon: Rocket },
+      { name: "Promos", href: "/admin/promos", icon: Ticket },
     ],
   },
   {

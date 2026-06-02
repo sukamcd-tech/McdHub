@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase";
 import {
   ShoppingBag, CheckCircle, Clock, AlertCircle, XCircle,
   Search, Phone, Mail, Calendar, Trash2, ChevronRight,
-  ClipboardList, ExternalLink, RefreshCw
+  ClipboardList, ExternalLink, RefreshCw, Ticket
 } from "lucide-react";
 
 interface Order {
@@ -19,6 +19,7 @@ interface Order {
   specs: string;
   addons: string[];
   description: string;
+  promo_code?: string | null;
   status: "pending" | "processing" | "completed" | "cancelled";
   created_at: string;
   updated_at: string;
@@ -288,9 +289,17 @@ export default function AdminOrdersPage() {
                       <h2 className="text-lg font-bold tracking-tight text-[var(--silver-100)] leading-none mb-1">
                         {selectedOrder.package_name}
                       </h2>
-                      <p className="text-xs font-mono font-black text-[var(--silver-400)]">
-                        {selectedOrder.price}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-mono font-black text-[var(--silver-400)]">
+                          {selectedOrder.price}
+                        </span>
+                        {selectedOrder.promo_code && (
+                          <span className="px-2 py-0.5 rounded bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.15)] text-[8px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1 font-mono">
+                            <Ticket className="w-2.5 h-2.5" />
+                            Promo: {selectedOrder.promo_code}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 

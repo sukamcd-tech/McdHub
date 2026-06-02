@@ -71,7 +71,7 @@ export default function ProjectsClient({ initialProjects }: { initialProjects: P
   return (
     <div className={isScrollable
       ? "min-h-screen flex flex-col justify-between p-8 lg:p-12 relative overflow-x-hidden bg-[var(--bg-root)] text-[var(--silver-100)] selection:bg-white selection:text-black"
-      : "h-screen max-h-screen overflow-hidden flex flex-col justify-between p-8 lg:p-12 relative bg-[var(--bg-root)] text-[var(--silver-100)] selection:bg-white selection:text-black"
+      : "lg:h-screen lg:max-h-screen lg:overflow-hidden min-h-screen flex flex-col justify-between p-8 lg:p-12 relative overflow-y-auto bg-[var(--bg-root)] text-[var(--silver-100)] selection:bg-white selection:text-black"
     }>
       
       {/* ── High-Tech Cyber Grid Background ── */}

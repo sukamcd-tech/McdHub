@@ -98,7 +98,7 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="h-screen max-h-screen overflow-hidden flex flex-col bg-[var(--bg-root)] text-[var(--silver-100)] select-none">
+    <div className="lg:h-screen lg:max-h-screen lg:overflow-hidden min-h-screen overflow-y-auto flex flex-col bg-[var(--bg-root)] text-[var(--silver-100)] select-none">
 
       {/* Subtle background texture */}
       <div
@@ -165,7 +165,7 @@ export default function ContactPage() {
           <div className="lg:col-span-2 space-y-5">
             <div className="space-y-4">
               {[
-                { icon: Mail, label: 'Email', value: 'sukamcdev@gmail.com', href: 'mailto:sukamcdev@gmail.com', isLink: true },
+                { icon: Mail, label: 'Email', value: 'dev@sukamcd.tech', href: 'mailto:dev@sukamcd.tech', isLink: true },
                 { icon: MapPin, label: 'Based in', value: 'Indonesia', isLink: false },
                 { icon: Clock, label: 'Timezone', value: 'GMT+7 · WIB', isLink: false },
               ].map(({ icon: Icon, label, value, href, isLink }) => (
@@ -219,7 +219,7 @@ export default function ContactPage() {
                       onChange={(e) => setName(e.target.value)}
                       required
                       className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-[var(--bg-surface)] border border-[var(--border-soft)] text-[var(--silver-100)] focus:border-[var(--border-silver)] focus:outline-none focus:bg-[var(--bg-elevated)] transition-all duration-200 placeholder-[var(--silver-700)]"
-                      placeholder="Fabian"
+                      placeholder="John Doe"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -230,7 +230,7 @@ export default function ContactPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-[var(--bg-surface)] border border-[var(--border-soft)] text-[var(--silver-100)] focus:border-[var(--border-silver)] focus:outline-none focus:bg-[var(--bg-elevated)] transition-all duration-200 placeholder-[var(--silver-700)]"
-                      placeholder="you@email.com"
+                      placeholder="you@sukamcd.tech"
                     />
                   </div>
                 </div>

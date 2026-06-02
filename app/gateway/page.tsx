@@ -177,7 +177,7 @@ function GatewayContent() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="w-full p-4 pl-11 text-xs rounded-xl bg-black/40 border border-[var(--border-soft)] text-[var(--silver-200)] focus:border-[var(--border-silver)] focus:bg-[rgba(10,10,14,0.6)] focus:outline-none transition-all duration-300 placeholder-[var(--silver-700)] font-mono"
-                  placeholder="admin@sukamcd.com"
+                  placeholder="you@sukamcd.tech"
                   autoComplete="email"
                 />
               </div>

@@ -18,7 +18,7 @@ const plans = [
       "Animasi Halus & Interaktif (Framer Motion)",
       "Integrasi Form Kontak (ke Email/WhatsApp)",
       "SEO Dasar & Kecepatan Akses Super Cepat",
-      "Domain .my.id & Hosting Gratis (1 Tahun)",
+      "Domain .web.id & Hosting Gratis (1 Tahun)",
     ],
     accent: "rgba(212, 212, 216, 0.15)",
   },
@@ -34,7 +34,7 @@ const plans = [
       "Fitur CRUD Lengkap sesuai Kebutuhan",
       "Tech Stack: PHP/Laravel/CodeIgniter atau Fullstack JS",
       "Integrasi Database (MySQL / PostgreSQL)",
-      "Domain .my.id & Hosting Gratis (1 Tahun)",
+      "Domain .web.id & Hosting Gratis (1 Tahun)",
     ],
     accent: "rgba(212, 212, 216, 0.25)",
     popular: true,
@@ -51,7 +51,7 @@ const plans = [
       "Integrasi API & Database Lokal",
       "UI/UX Modern & Responsif untuk Tablet & HP",
       "Notifikasi Push & Fitur Offline (Opsional)",
-      "Domain .my.id & Hosting API Gratis (1 Tahun)",
+      "Domain .web.id & Hosting API Gratis (1 Tahun)",
     ],
     accent: "rgba(212, 212, 216, 0.15)",
   },
@@ -67,17 +67,67 @@ const plans = [
       "Multi-platform Integration (Terhubung ke Mobile/API)",
       "Dasbor Analitik & Laporan Interaktif",
       "Keamanan Tinggi & Enkripsi Data Sensitif",
-      "Domain .my.id & Hosting Cloud Server (1 Tahun)",
+      "Domain .com / .co.id & Hosting Cloud Server (1 Tahun)",
     ],
     accent: "rgba(212, 212, 216, 0.15)",
+  },
+  {
+    id: "erp-android",
+    name: "Sistem ERP + Android Native",
+    price: "Rp 7,5jt - 15,0jt",
+    description: "Kombinasi sistem ERP berbasis web dengan aplikasi Android native terintegrasi penuh.",
+    badge: "Enterprise Plus",
+    features: [
+      "Semua Fitur Paket Sistem ERP / Enterprise",
+      "Aplikasi Android Native (Kotlin/Java)",
+      "Sinkronisasi Data Real-time via API",
+      "Push Notifications & Scan Barcode Kamera",
+      "Rilis Google Play Store (Dibantu Penuh)",
+      "Cloud VPS Dedicated & SSL (1 Tahun)",
+    ],
+    accent: "rgba(212, 212, 216, 0.15)",
+    comingSoon: true,
+  },
+  {
+    id: "erp-monthly-basic",
+    name: "ERP Bulanan - Basic (UMKM)",
+    price: "Rp 150rb / bulan",
+    description: "Hak akses sistem ERP cloud khusus UMKM. Efisien, cepat, dan siap pakai.",
+    badge: "SaaS Basic",
+    features: [
+      "Modul Kasir (POS) & Manajemen Stok/Gudang",
+      "Maksimal 3 Akun Staff / Pengguna",
+      "Laporan Penjualan & Inventaris Otomatis",
+      "Hosting, Server, & Maintenance Ditanggung SukaMCD",
+      "Pembaruan Sistem & Fitur Berkala",
+    ],
+    accent: "rgba(212, 212, 216, 0.1)",
+    comingSoon: true,
+  },
+  {
+    id: "erp-monthly-prof",
+    name: "ERP Bulanan - Profesional",
+    price: "Rp 350rb / bulan",
+    description: "Akses penuh modul ERP cloud dengan kapasitas pengguna tanpa batas untuk bisnis Anda.",
+    badge: "SaaS Pro",
+    features: [
+      "Semua Fitur Paket ERP Bulanan Basic",
+      "Modul Akuntansi, CRM, Pembelian & SDM (HRIS)",
+      "Akun Staff / Pengguna Tanpa Batas (Unlimited)",
+      "Dashboard Analitik Multi-cabang & Multi-gudang",
+      "Backup Data Mingguan Otomatis",
+      "Dukungan Teknis Prioritas via WA",
+    ],
+    accent: "rgba(212, 212, 216, 0.15)",
+    comingSoon: true,
   },
 ];
 
 const policies = [
   {
     icon: Globe,
-    title: "Hosting & Domain .my.id",
-    desc: "Semua paket sudah termasuk sewa hosting & domain .my.id selama 1 tahun secara gratis. Untuk custom domain (.com, .co.id, dll) akan dikenakan biaya tambahan.",
+    title: "Hosting & Domain .web.id",
+    desc: "Semua paket sudah termasuk sewa hosting & domain .web.id selama 1 tahun secara gratis. Untuk custom domain (.com, .co.id, dll) akan dikenakan biaya tambahan.",
   },
   {
     icon: RefreshCw,
@@ -107,6 +157,16 @@ export default function PricingPage() {
       const { data } = await supabase.auth.getSession();
       setIsLoggedIn(!!data.session);
       setAuthChecked(true);
+
+      // Clean up OAuth query parameters from URL once session is resolved
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has("code") || url.searchParams.has("state")) {
+          url.searchParams.delete("code");
+          url.searchParams.delete("state");
+          window.history.replaceState({}, document.title, url.pathname + url.search);
+        }
+      }
     }
 
     loadSession();
@@ -115,6 +175,11 @@ export default function PricingPage() {
   const handleSelectPlan = (planId: string) => {
     const orderPath = `/pricing/order?package=${planId}`;
     if (!authChecked) {
+      return;
+    }
+
+    const plan = plans.find(p => p.id === planId);
+    if (plan?.comingSoon) {
       return;
     }
 
@@ -198,6 +263,8 @@ export default function PricingPage() {
                 className={`flex flex-col justify-between p-6 rounded-2xl border relative overflow-hidden select-none transition-all duration-300 ${
                   plan.popular
                     ? "bg-[var(--bg-elevated)] border-[var(--border-silver)] shadow-[0_16px_40px_rgba(0,0,0,0.6)]"
+                    : plan.comingSoon
+                    ? "bg-[rgba(15,15,19,0.4)] border-[var(--border-soft)] border-dashed opacity-75 hover:opacity-90 hover:border-[var(--border-subtle)]"
                     : "bg-[var(--bg-surface)] border-[var(--border-subtle)] hover:border-[var(--border-silver)] hover:bg-[var(--bg-elevated)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.4)]"
                 }`}
               >
@@ -205,6 +272,11 @@ export default function PricingPage() {
                 {plan.popular && (
                   <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--silver-200)] text-[#0f0f13] text-[7.5px] font-black uppercase tracking-wider font-mono">
                     Popular Choice
+                  </div>
+                )}
+                {plan.comingSoon && (
+                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--bg-elevated)] border border-[var(--border-soft)] text-[var(--silver-400)] text-[7.5px] font-mono font-black uppercase tracking-wider">
+                    Coming Soon
                   </div>
                 )}
 
@@ -244,14 +316,17 @@ export default function PricingPage() {
                 <div className="mt-8">
                   <button
                     type="button"
+                    disabled={plan.comingSoon}
                     onClick={() => handleSelectPlan(plan.id)}
                     className={`w-full py-2.5 rounded-xl text-[10px] font-mono tracking-[0.15em] font-black uppercase flex items-center justify-center transition-all duration-200 ${
-                      plan.popular
+                      plan.comingSoon
+                        ? "bg-[var(--bg-root)] text-[var(--silver-600)] border border-[var(--border-soft)] border-dashed cursor-not-allowed"
+                        : plan.popular
                         ? "bg-[var(--silver-200)] text-[#0f0f13] hover:bg-[var(--silver-100)] shadow-lg hover:shadow-[0_0_16px_rgba(212,212,216,0.2)]"
                         : "bg-[var(--bg-root)] text-[var(--silver-300)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] hover:text-white"
                     }`}
                   >
-                    Pilih Paket
+                    {plan.comingSoon ? "Coming Soon" : "Pilih Paket"}
                   </button>
                 </div>
               </motion.div>

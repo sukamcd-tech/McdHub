@@ -27,6 +27,7 @@ interface Order {
   specs: string;
   addons: string[];
   description: string;
+  promo_code?: string | null;
   status: "pending" | "processing" | "completed" | "cancelled";
   created_at: string;
   updated_at: string;
@@ -110,7 +111,7 @@ export default function ClientProfileClient({ profile, userEmail, orders = [] }:
   };
 
   return (
-    <div className="h-screen max-h-screen overflow-hidden flex flex-col bg-[var(--bg-root)] text-[var(--silver-100)] select-none">
+    <div className="lg:h-screen lg:max-h-screen lg:overflow-hidden min-h-screen overflow-y-auto flex flex-col bg-[var(--bg-root)] text-[var(--silver-100)] select-none">
       
       {/* Subtle background texture */}
       <div
@@ -227,7 +228,7 @@ export default function ClientProfileClient({ profile, userEmail, orders = [] }:
           </div>
 
           {/* Right Column — Edit Form & Order History */}
-          <div className="lg:col-span-3 flex flex-col h-[calc(100vh-230px)]">
+          <div className="lg:col-span-3 flex flex-col lg:h-[calc(100vh-230px)]">
             {/* Tabs Navigation */}
             <div className="flex gap-6 border-b border-[var(--border-subtle)] pb-2 mb-5 select-none shrink-0">
               <button
@@ -471,10 +472,20 @@ export default function ClientProfileClient({ profile, userEmail, orders = [] }:
 
                             {isExpanded && (
                               <div className="border-t border-[var(--border-subtle)] p-5 space-y-4 text-xs bg-black/10 select-text leading-relaxed animate-in slide-in-from-top-2 duration-200">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                   <div>
                                     <p className="text-[9px] font-mono uppercase tracking-widest text-[var(--silver-600)] mb-1">WhatsApp</p>
                                     <p className="font-mono text-[var(--silver-300)] font-bold">{order.whatsapp}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[9px] font-mono uppercase tracking-widest text-[var(--silver-600)] mb-1">Kode Promo</p>
+                                    <p className="font-mono text-[var(--silver-300)] font-bold">
+                                      {order.promo_code ? (
+                                        <span className="text-emerald-400 font-bold uppercase tracking-wider">{order.promo_code}</span>
+                                      ) : (
+                                        <span className="text-[var(--silver-600)] font-light">-</span>
+                                      )}
+                                    </p>
                                   </div>
                                   <div>
                                     <p className="text-[9px] font-mono uppercase tracking-widest text-[var(--silver-600)] mb-1">Order ID</p>
