@@ -287,7 +287,7 @@ export default function PricingPage() {
                 {/* Popular Ribbon/Indicator */}
                 {plan.popular && (
                   <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--silver-200)] text-[#0f0f13] text-[7.5px] font-black uppercase tracking-wider font-mono">
-                    Popular Choice
+                    Recommendation
                   </div>
                 )}
                 {plan.comingSoon && (
