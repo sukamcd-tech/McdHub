@@ -81,6 +81,81 @@ const plans = {
   }
 };
 
+const parsePrice = (priceStr: string): { min: number; max: number; type: "range" | "single" | "text"; suffix: string } => {
+  if (priceStr.toLowerCase().includes("diskon")) {
+    return { min: 0, max: 0, type: "text", suffix: "" };
+  }
+
+  const isMonthly = priceStr.toLowerCase().includes("bulan");
+  const cleanStr = priceStr.replace("Rp", "").replace("/ bulan", "").replace("/bulan", "").trim();
+
+  const parseVal = (valStr: string): number => {
+    const s = valStr.trim().toLowerCase().replace(",", ".");
+    if (s.includes("rb")) {
+      return parseFloat(s.replace("rb", "")) * 1000;
+    }
+    if (s.includes("jt")) {
+      return parseFloat(s.replace("jt", "")) * 1000000;
+    }
+    return parseFloat(s) || 0;
+  };
+
+  const suffix = isMonthly ? " / bulan" : "";
+
+  if (cleanStr.includes("-")) {
+    const parts = cleanStr.split("-");
+    const min = parseVal(parts[0]);
+    const max = parseVal(parts[1]);
+    return { min, max, type: "range", suffix };
+  } else {
+    const val = parseVal(cleanStr);
+    return { min: val, max: val, type: "single", suffix };
+  }
+};
+
+const formatVal = (val: number): string => {
+  if (val >= 1000000) {
+    const jt = val / 1000000;
+    const formatted = parseFloat(jt.toFixed(2)).toString().replace(".", ",");
+    return `${formatted}jt`;
+  }
+  if (val >= 1000) {
+    const rb = val / 1000;
+    const formatted = parseFloat(rb.toFixed(2)).toString().replace(".", ",");
+    return `${formatted}rb`;
+  }
+  return val.toString();
+};
+
+const formatPrice = (min: number, max: number, type: "range" | "single" | "text", suffix: string): string => {
+  if (type === "text") return "";
+  if (type === "single") {
+    return `Rp ${formatVal(min)}${suffix}`;
+  }
+  return `Rp ${formatVal(min)} - ${formatVal(max)}${suffix}`;
+};
+
+const applyDiscount = (priceStr: string, discountType: string, discountValue: number): string => {
+  const parsed = parsePrice(priceStr);
+  if (parsed.type === "text") return priceStr;
+
+  let newMin = parsed.min;
+  let newMax = parsed.max;
+
+  if (discountType === "percentage") {
+    const factor = (100 - discountValue) / 100;
+    newMin = Math.round(parsed.min * factor);
+    newMax = Math.round(parsed.max * factor);
+  } else if (discountType === "nominal") {
+    newMin = Math.max(0, parsed.min - discountValue);
+    newMax = Math.max(0, parsed.max - discountValue);
+  } else {
+    return priceStr;
+  }
+
+  return formatPrice(newMin, newMax, parsed.type, parsed.suffix);
+};
+
 function OrderFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -119,7 +194,12 @@ function OrderFormContent() {
 
   // Promo Code State
   const [promoInput, setPromoInput] = useState("");
-  const [appliedPromo, setAppliedPromo] = useState<{ code: string; benefit: string } | null>(null);
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string;
+    benefit: string;
+    discount_type: "percentage" | "nominal" | "none";
+    discount_value: number;
+  } | null>(null);
   const [promoError, setPromoError] = useState("");
   const [promoValidating, setPromoValidating] = useState(false);
 
@@ -151,7 +231,9 @@ function OrderFormContent() {
 
         setAppliedPromo({
           code: data.code,
-          benefit: data.benefit
+          benefit: data.benefit,
+          discount_type: data.discount_type as any || "none",
+          discount_value: data.discount_value || 0
         });
         setPromoError("");
       } else {
@@ -214,6 +296,11 @@ function OrderFormContent() {
   }, [packageParam, router, supabase, email]);
 
   const currentPlan = plans[selectedPlanId as keyof typeof plans] || plans.static;
+
+  const discountedPrice = useMemo(() => {
+    if (!appliedPromo || appliedPromo.discount_type === "none") return currentPlan.price;
+    return applyDiscount(currentPlan.price, appliedPromo.discount_type, appliedPromo.discount_value);
+  }, [appliedPromo, currentPlan.price]);
 
   // Double-check: jika sudah dicek tapi tidak login, jangan tampilkan apa-apa (redirect sudah dijalan)
   if (authChecked && !isLoggedIn) {
@@ -308,8 +395,13 @@ function OrderFormContent() {
         ? `${appliedPromo.code} (${appliedPromo.benefit})` 
         : "- Tidak ada kode diskon digunakan";
 
+      const priceDetailsText = appliedPromo && appliedPromo.discount_type !== "none"
+        ? `${currentPlan.price} (Potongan: ${appliedPromo.discount_type === "percentage" ? `${appliedPromo.discount_value}%` : `Rp ${appliedPromo.discount_value.toLocaleString("id-ID")}`}) -> ${discountedPrice}`
+        : currentPlan.price;
+
       const formattedDescription = `[Pemesanan Paket Website/App]
 Paket Pilihan: ${currentPlan.name}
+Harga Paket: ${priceDetailsText}
 Nama Pelanggan: ${name}
 Email: ${email}
 No. WhatsApp: ${whatsapp}
@@ -347,7 +439,7 @@ Ketentuan Umum:
             user_email: email,
             package_id: currentPlan.id,
             package_name: currentPlan.name,
-            price: currentPlan.price,
+            price: discountedPrice,
             whatsapp: whatsapp,
             specs: getSpecSummary(false),
             addons: selectedAddons,
@@ -379,11 +471,15 @@ Ketentuan Umum:
         }).join("%0A")
       : "- Tidak ada add-on dipilih";
 
+    const priceText = appliedPromo && appliedPromo.discount_type !== "none"
+      ? `~${currentPlan.price}~ *${discountedPrice}*`
+      : currentPlan.price;
+
     const promoText = appliedPromo 
       ? `*${appliedPromo.code}* (${appliedPromo.benefit})` 
       : "- Tidak ada";
 
-    const text = `Halo SukaMCD,%0A%0ASaya ingin memesan paket pengembangan website/aplikasi dengan detail berikut:%0A%0A*Paket:* ${currentPlan.name}%0A*Nama:* ${name}%0A*Email:* ${email}%0A*No. WhatsApp:* ${whatsapp}%0A%0A*Spesifikasi Detail Paket:*%0A${getSpecSummary(true)}%0A%0A*Add-ons Terpilih:*%0A${addOnsText}%0A%0A*Kode Diskon:* ${promoText}%0A%0A*Deskripsi Kebutuhan:*%0A${encodeURIComponent(description)}%0A%0AMohon info kelanjutan proyek ini. Terima kasih!`;
+    const text = `Halo SukaMCD,%0A%0ASaya ingin memesan paket pengembangan website/aplikasi dengan detail berikut:%0A%0A*Paket:* ${currentPlan.name}%0A*Harga:* ${priceText}%0A*Nama:* ${name}%0A*Email:* ${email}%0A*No. WhatsApp:* ${whatsapp}%0A%0A*Spesifikasi Detail Paket:*%0A${getSpecSummary(true)}%0A%0A*Add-ons Terpilih:*%0A${addOnsText}%0A%0A*Kode Diskon:* ${promoText}%0A%0A*Deskripsi Kebutuhan:*%0A${encodeURIComponent(description)}%0A%0AMohon info kelanjutan proyek ini. Terima kasih!`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, "_blank");
   };
 
@@ -458,9 +554,20 @@ Ketentuan Umum:
               <h3 className="text-xl font-bold text-[var(--silver-100)] tracking-tight">
                 {currentPlan.name}
               </h3>
-              <p className="text-lg font-black text-gradient bg-gradient-to-b from-[var(--silver-100)] via-[var(--silver-200)] to-[var(--silver-400)] bg-clip-text text-transparent tracking-tight mt-0.5">
-                {currentPlan.price}
-              </p>
+              {appliedPromo && appliedPromo.discount_type !== "none" ? (
+                <div className="flex flex-col mt-0.5">
+                  <span className="text-xs line-through text-zinc-500 font-medium">
+                    {currentPlan.price}
+                  </span>
+                  <span className="text-lg font-black text-emerald-400 tracking-tight">
+                    {discountedPrice}
+                  </span>
+                </div>
+              ) : (
+                <p className="text-lg font-black text-gradient bg-gradient-to-b from-[var(--silver-100)] via-[var(--silver-200)] to-[var(--silver-400)] bg-clip-text text-transparent tracking-tight mt-0.5">
+                  {currentPlan.price}
+                </p>
+              )}
             </div>
             <p className="text-[11px] leading-relaxed text-[var(--silver-500)] font-medium">
               {currentPlan.description}

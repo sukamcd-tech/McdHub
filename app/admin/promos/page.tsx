@@ -23,6 +23,8 @@ interface PromoCode {
   is_active: boolean;
   start_date?: string | null;
   end_date?: string | null;
+  discount_type: "percentage" | "nominal" | "none";
+  discount_value: number;
   created_at: string;
   updated_at: string;
 }
@@ -68,6 +70,8 @@ export default function AdminPromosPage() {
   const [formIsActive, setFormIsActive] = useState(true);
   const [formStartDate, setFormStartDate] = useState("");
   const [formEndDate, setFormEndDate] = useState("");
+  const [formDiscountType, setFormDiscountType] = useState<"percentage" | "nominal" | "none">("none");
+  const [formDiscountValue, setFormDiscountValue] = useState<number>(0);
   const [formError, setFormError] = useState("");
   const [formSubmitting, setFormSubmitting] = useState(false);
 
@@ -100,6 +104,8 @@ export default function AdminPromosPage() {
     setFormIsActive(true);
     setFormStartDate("");
     setFormEndDate("");
+    setFormDiscountType("none");
+    setFormDiscountValue(0);
     setFormError("");
     setIsModalOpen(true);
   };
@@ -112,6 +118,8 @@ export default function AdminPromosPage() {
     setFormIsActive(promo.is_active);
     setFormStartDate(toDatetimeLocal(promo.start_date));
     setFormEndDate(toDatetimeLocal(promo.end_date));
+    setFormDiscountType(promo.discount_type || "none");
+    setFormDiscountValue(promo.discount_value || 0);
     setFormError("");
     setIsModalOpen(true);
   };
@@ -125,6 +133,16 @@ export default function AdminPromosPage() {
 
     if (formStartDate && formEndDate && new Date(formStartDate) >= new Date(formEndDate)) {
       setFormError("Tanggal selesai harus setelah tanggal mulai.");
+      return;
+    }
+
+    if (formDiscountType !== "none" && formDiscountValue <= 0) {
+      setFormError("Nilai diskon harus lebih besar dari 0.");
+      return;
+    }
+
+    if (formDiscountType === "percentage" && formDiscountValue > 100) {
+      setFormError("Nilai persentase diskon tidak boleh melebihi 100%.");
       return;
     }
 
@@ -146,6 +164,8 @@ export default function AdminPromosPage() {
             is_active: formIsActive,
             start_date: startDateValue,
             end_date: endDateValue,
+            discount_type: formDiscountType,
+            discount_value: formDiscountValue,
             updated_at: new Date().toISOString(),
           })
           .eq("id", selectedPromo.id);
@@ -162,6 +182,8 @@ export default function AdminPromosPage() {
                   is_active: formIsActive,
                   start_date: startDateValue,
                   end_date: endDateValue,
+                  discount_type: formDiscountType,
+                  discount_value: formDiscountValue,
                   updated_at: new Date().toISOString(),
                 }
               : item
@@ -178,6 +200,8 @@ export default function AdminPromosPage() {
               is_active: formIsActive,
               start_date: startDateValue,
               end_date: endDateValue,
+              discount_type: formDiscountType,
+              discount_value: formDiscountValue,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             },
@@ -374,8 +398,15 @@ export default function AdminPromosPage() {
                     </td>
 
                     {/* Benefit */}
-                    <td className="py-4 px-6 font-medium text-[var(--silver-200)] max-w-xs truncate">
-                      {promo.benefit}
+                    <td className="py-4 px-6 font-medium text-[var(--silver-200)] max-w-xs">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="truncate block">{promo.benefit}</span>
+                        {promo.discount_type !== "none" && (
+                          <span className="text-[10px] text-[var(--silver-500)] font-mono">
+                            Potongan: {promo.discount_type === "percentage" ? `${promo.discount_value}%` : `Rp ${promo.discount_value.toLocaleString("id-ID")}`}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Status Toggle Button */}
@@ -501,6 +532,48 @@ export default function AdminPromosPage() {
                   className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[var(--bg-surface)] border border-[var(--border-soft)] text-[var(--silver-100)] focus:border-[var(--border-silver)] focus:outline-none focus:bg-[var(--bg-elevated)] transition-all"
                   disabled={formSubmitting}
                 />
+              </div>
+
+              {/* Discount Config */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-[9px] font-mono uppercase tracking-widest text-[var(--silver-500)]">
+                    Tipe Potongan Harga
+                  </label>
+                  <select
+                    value={formDiscountType}
+                    onChange={(e) => {
+                      setFormDiscountType(e.target.value as any);
+                      if (e.target.value === "none") {
+                        setFormDiscountValue(0);
+                      }
+                    }}
+                    className="w-full px-3 py-2.5 text-xs rounded-xl bg-[var(--bg-surface)] border border-[var(--border-soft)] text-[var(--silver-200)] focus:outline-none focus:border-[var(--border-silver)] cursor-pointer"
+                    disabled={formSubmitting}
+                  >
+                    <option value="none">Kustom (Tanpa Potongan Otomatis)</option>
+                    <option value="percentage">Persentase (%)</option>
+                    <option value="nominal">Nominal (Rupiah)</option>
+                  </select>
+                </div>
+                {formDiscountType !== "none" && (
+                  <div className="space-y-1.5">
+                    <label className="block text-[9px] font-mono uppercase tracking-widest text-[var(--silver-500)]">
+                      {formDiscountType === "percentage" ? "Persentase (%)" : "Nilai Rupiah (Rp)"}
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={1}
+                      max={formDiscountType === "percentage" ? 100 : undefined}
+                      placeholder={formDiscountType === "percentage" ? "10" : "500000"}
+                      value={formDiscountValue || ""}
+                      onChange={(e) => setFormDiscountValue(parseFloat(e.target.value) || 0)}
+                      className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[var(--bg-surface)] border border-[var(--border-soft)] text-[var(--silver-100)] focus:border-[var(--border-silver)] focus:outline-none focus:bg-[var(--bg-elevated)] transition-all font-mono"
+                      disabled={formSubmitting}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Start & End Date */}

@@ -235,14 +235,16 @@ ALTER TABLE public.orders ADD COLUMN promo_code TEXT;
 -- 8. PROMO CODES - Discount & Promo Codes
 -- =====================================================
 CREATE TABLE public.promo_codes (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  code        TEXT UNIQUE NOT NULL,
-  benefit     TEXT NOT NULL,
-  is_active   BOOLEAN NOT NULL DEFAULT TRUE,
-  start_date  TIMESTAMPTZ,
-  end_date    TIMESTAMPTZ,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code            TEXT UNIQUE NOT NULL,
+  benefit         TEXT NOT NULL,
+  is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+  start_date      TIMESTAMPTZ,
+  end_date        TIMESTAMPTZ,
+  discount_type   TEXT NOT NULL DEFAULT 'none',
+  discount_value  NUMERIC NOT NULL DEFAULT 0,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Enable RLS
