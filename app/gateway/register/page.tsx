@@ -22,11 +22,24 @@ export default function RegisterPage() {
 
   // Load and render Cloudflare Turnstile widget
   useEffect(() => {
+    const loadedKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
     // Define Turnstile render callback globally
     (window as any).onloadTurnstileCallback = () => {
       if ((window as any).turnstile) {
+        const isLocalhost = typeof window !== 'undefined' && 
+          (window.location.hostname === 'localhost' || 
+           window.location.hostname === '127.0.0.1' || 
+           window.location.hostname.endsWith('.test'));
+
+        const resolvedSiteKey = isLocalhost 
+          ? '2x00000000000000000000AB' // Fallback to test key for local development
+          : (loadedKey || '2x00000000000000000000AB');
+
+        console.log("SukaMCD Turnstile Site Key resolved:", resolvedSiteKey);
+
         (window as any).turnstile.render('#turnstile-container', {
-          sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '2x00000000000000000000AB',
+          sitekey: resolvedSiteKey,
           theme: 'dark',
           callback: (token: string) => {
             setTurnstileToken(token)
@@ -36,6 +49,7 @@ export default function RegisterPage() {
           },
           'error-callback': () => {
             setTurnstileToken(null)
+            console.warn("Cloudflare Turnstile failed to load or verify.");
           }
         })
       }
