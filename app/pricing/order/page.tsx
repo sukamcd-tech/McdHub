@@ -16,7 +16,7 @@ const plans = {
     price: "Rp 500rb - 750rb",
     description: "1–5 Halaman (Home, About, Contact). Responsive, animasi halus, integrasi form ke email/WhatsApp.",
     addons: [
-      { id: "custom_domain", label: "Custom Domain (.com, .co.id, dll.)", desc: "Menggunakan domain pilihan Anda alih-alih .web.id" },
+      { id: "custom_domain", label: "Custom Domain (.com, .co.id, dll.)", desc: "Menggunakan domain pilihan Anda alih-alih .my.id" },
     ]
   },
   "web-biasa": {
@@ -25,7 +25,7 @@ const plans = {
     price: "Rp 2,0jt - 2,5jt",
     description: "Web CMS, blog, atau portal berita sederhana dengan Admin Panel. Menggunakan PHP/Laravel/CI atau Fullstack modern.",
     addons: [
-      { id: "custom_domain", label: "Custom Domain (.com, .co.id, dll.)", desc: "Menggunakan domain pilihan Anda alih-alih .web.id" },
+      { id: "custom_domain", label: "Custom Domain (.com, .co.id, dll.)", desc: "Menggunakan domain pilihan Anda alih-alih .my.id" },
     ]
   },
   "android-app": {
@@ -34,7 +34,7 @@ const plans = {
     price: "Rp 2,5jt - 5,0jt",
     description: "Aplikasi fungsional (bukan sekadar web-view). Integrasi API, lokal database, UI/UX modern.",
     addons: [
-      { id: "custom_domain", label: "Custom Domain untuk API/Admin Panel", desc: "Menggunakan domain pilihan Anda alih-alih .web.id untuk backend" },
+      { id: "custom_domain", label: "Custom Domain untuk API/Admin Panel", desc: "Menggunakan domain pilihan Anda alih-alih .my.id untuk backend" },
       { id: "playstore", label: "Rilis ke Google Play Store", desc: "Bantuan pendaftaran dan rilis penuh di toko aplikasi Google Play" },
     ]
   },
@@ -76,7 +76,7 @@ const plans = {
     price: "Diskon s.d 30%",
     description: "Tugas akhir, skripsi, portfolio kelulusan, atau website organisasi sekolah/kampus. Tunjukkan Kartu Pelajar / KTM aktif.",
     addons: [
-      { id: "custom_domain", label: "Custom Domain (.com, .co.id, dll.)", desc: "Menggunakan domain pilihan Anda alih-alih .web.id" },
+      { id: "custom_domain", label: "Custom Domain (.com, .co.id, dll.)", desc: "Menggunakan domain pilihan Anda alih-alih .my.id" },
     ]
   }
 };
@@ -420,7 +420,7 @@ ${description}
 
 ---
 Ketentuan Umum:
-- Free hosting & domain .web.id (1 Tahun)
+- Free hosting & domain .my.id (1 Tahun)
 - Free revisi tampilan 2x
 - Garansi Bug/Error 3 Bulan`;
 
@@ -583,7 +583,7 @@ Ketentuan Umum:
           <ul className="space-y-3 text-[11px] text-[var(--silver-500)] font-light leading-relaxed">
             <li className="flex gap-2.5 items-start">
               <Globe className="w-3.5 h-3.5 text-[var(--silver-400)] shrink-0 mt-0.5" />
-              <span>Free Hosting & domain <strong className="text-[var(--silver-300)]">.web.id</strong> untuk 1 tahun pertama.</span>
+              <span>Free Hosting & domain <strong className="text-[var(--silver-300)]">.my.id</strong> untuk 1 tahun pertama.</span>
             </li>
             <li className="flex gap-2.5 items-start">
               <RefreshCw className="w-3.5 h-3.5 text-[var(--silver-400)] shrink-0 mt-0.5" />

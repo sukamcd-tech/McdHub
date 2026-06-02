@@ -18,7 +18,7 @@ const plans = [
       "Animasi Halus & Interaktif (Framer Motion)",
       "Integrasi Form Kontak (ke Email/WhatsApp)",
       "SEO Dasar & Kecepatan Akses Super Cepat",
-      "Domain .web.id & Hosting Gratis (1 Tahun)",
+      "Domain .my.id & Hosting Gratis (1 Tahun)",
     ],
     accent: "rgba(212, 212, 216, 0.15)",
   },
@@ -34,7 +34,7 @@ const plans = [
       "Fitur CRUD Lengkap sesuai Kebutuhan",
       "Tech Stack: PHP/Laravel/CodeIgniter atau Fullstack JS",
       "Integrasi Database (MySQL / PostgreSQL)",
-      "Domain .web.id & Hosting Gratis (1 Tahun)",
+      "Domain .my.id & Hosting Gratis (1 Tahun)",
     ],
     accent: "rgba(212, 212, 216, 0.25)",
     popular: true,
@@ -51,7 +51,7 @@ const plans = [
       "Integrasi API & Database Lokal",
       "UI/UX Modern & Responsif untuk Tablet & HP",
       "Notifikasi Push & Fitur Offline (Opsional)",
-      "Domain .web.id & Hosting API Gratis (1 Tahun)",
+      "Domain .my.id & Hosting API Gratis (1 Tahun)",
     ],
     accent: "rgba(212, 212, 216, 0.15)",
   },
@@ -126,8 +126,8 @@ const plans = [
 const policies = [
   {
     icon: Globe,
-    title: "Hosting & Domain .web.id",
-    desc: "Semua paket sudah termasuk sewa hosting & domain .web.id selama 1 tahun secara gratis. Untuk custom domain (.com, .co.id, dll) akan dikenakan biaya tambahan.",
+    title: "Hosting & Domain .my.id",
+    desc: "Semua paket sudah termasuk sewa hosting & domain .my.id selama 1 tahun secara gratis. Untuk custom domain (.com, .co.id, dll) akan dikenakan biaya tambahan.",
   },
   {
     icon: RefreshCw,
@@ -204,8 +204,8 @@ export default function PricingPage() {
       />
 
       {/* ── Header ── */}
-      <header className="w-full max-w-6xl mx-auto flex justify-between items-center z-10 shrink-0 mb-10">
-        <Link href="/" className="flex items-center gap-2.5 group">
+      <header className="w-full max-w-6xl mx-auto flex justify-between items-center relative z-50 shrink-0 mb-10">
+        <Link href="/" className="flex items-center gap-2.5 group relative z-50">
           <div className="w-6 h-6 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] flex items-center justify-center shadow-lg group-hover:border-[var(--border-silver)] transition-all">
             <ArrowLeft className="w-3 h-3 text-[var(--silver-500)] group-hover:text-[var(--silver-200)] transition-colors" />
           </div>
@@ -217,7 +217,7 @@ export default function PricingPage() {
         {isLoggedIn ? (
           <Link 
             href="/profile" 
-            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10"
+            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[11px] font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10"
           >
             <User className="w-3 h-3 text-[var(--silver-500)]" />
             Profile
@@ -225,9 +225,8 @@ export default function PricingPage() {
         ) : (
           <Link 
             href="/gateway" 
-            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10"
+            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[11px] font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10"
           >
-            <Lock className="w-3 h-3 text-[var(--silver-500)]" />
             Sign-in
           </Link>
         )}

@@ -110,8 +110,8 @@ export default function ContactPage() {
       />
 
       {/* ── Header ── */}
-      <header className="w-full max-w-6xl mx-auto px-8 lg:px-12 pt-7 pb-0 flex justify-between items-center z-10 shrink-0">
-        <Link href="/" className="flex items-center gap-2.5 group">
+      <header className="w-full max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 pt-7 pb-0 flex justify-between items-center relative z-50 shrink-0">
+        <Link href="/" className="flex items-center gap-2.5 group relative z-50">
           <div className="w-6 h-6 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] flex items-center justify-center shadow-lg group-hover:border-[var(--border-silver)] transition-all">
             <ArrowLeft className="w-3 h-3 text-[var(--silver-500)] group-hover:text-[var(--silver-200)] transition-colors" />
           </div>
@@ -125,7 +125,7 @@ export default function ContactPage() {
         {isLoggedIn ? (
           <Link 
             href="/profile" 
-            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10"
+            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[11px] font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10"
           >
             <User className="w-3 h-3 text-[var(--silver-500)]" />
             Profile
@@ -133,16 +133,15 @@ export default function ContactPage() {
         ) : (
           <Link 
             href="/gateway" 
-            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10"
+            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[11px] font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10"
           >
-            <Lock className="w-3 h-3 text-[var(--silver-500)]" />
             Sign-in
           </Link>
         )}
       </header>
 
       {/* ── Main ── */}
-      <main className="w-full max-w-6xl mx-auto px-8 lg:px-12 flex-1 flex flex-col justify-center z-10 gap-8 py-4">
+      <main className="w-full max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 flex-1 flex flex-col justify-center z-10 gap-8 py-4">
 
         {/* Page title */}
         <div>
@@ -299,12 +298,12 @@ export default function ContactPage() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="w-full max-w-6xl mx-auto px-8 lg:px-12 border-t border-[var(--border-subtle)] pt-6 flex justify-between items-end z-10 shrink-0 select-none pb-6">
+      <footer className="w-full max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 border-t border-[var(--border-subtle)] pt-6 flex flex-col sm:flex-row justify-between items-center sm:items-end gap-6 z-10 shrink-0 select-none pb-6 text-center sm:text-left">
         <div className="space-y-2.5">
           <div className="text-[9px] font-black uppercase tracking-wider text-[var(--silver-600)] font-mono">
             &copy; {new Date().getFullYear()} SukaMCD. All rights reserved.
           </div>
-          <div className="flex gap-5">
+          <div className="flex justify-center sm:justify-start gap-5">
             <a href="https://github.com/SukaMCD" className="text-[9px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">Github</a>
             <a href="https://www.instagram.com/sukamcd.dev/" className="text-[9px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">Instagram</a>
             <a href="https://www.linkedin.com/in/fabianrizkypratama/" className="text-[9px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">LinkedIn</a>
@@ -313,7 +312,7 @@ export default function ContactPage() {
         
         <Link 
           href="/" 
-          className="text-[9.5px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-[var(--silver-100)] transition-colors border-b border-[var(--border-subtle)] pb-0.5"
+          className="text-[9.5px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-[var(--silver-100)] transition-colors border-b border-[var(--border-subtle)] pb-0.5 shrink-0"
         >
           ← Back home
         </Link>

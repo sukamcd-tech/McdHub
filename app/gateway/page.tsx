@@ -129,7 +129,7 @@ function GatewayContent() {
   }
 
   return (
-    <div className="fixed inset-0 w-full h-screen flex items-center justify-center p-6 overflow-hidden select-none bg-[var(--bg-root)]">
+    <div className="min-h-screen w-full flex items-center justify-center py-12 px-6 relative overflow-y-auto select-none bg-[var(--bg-root)]">
       {/* ── High-Tech Cyber Grid Background ── */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,212,216,0.02)_0%,transparent_75%)] pointer-events-none" />
       <div 
@@ -267,7 +267,7 @@ function GatewayContent() {
             </div>
 
             {/* OAuth Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
                 disabled={!isGoogleOAuthEnabled || loading}

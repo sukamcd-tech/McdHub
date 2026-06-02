@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
-import { ArrowUpRight, Plus, Laptop, Check, Sparkles, Globe, RefreshCw, ShieldCheck, AlertCircle, ChevronDown, Lock, User } from "lucide-react";
+import { ArrowUpRight, Plus, Laptop, Check, Sparkles, Globe, RefreshCw, ShieldCheck, AlertCircle, ChevronDown, User, Menu, X } from "lucide-react";
 
 interface Project {
   id: string;
@@ -28,7 +28,7 @@ const plans = [
       "Animasi Halus & Interaktif (Framer Motion)",
       "Integrasi Form Kontak (ke Email/WhatsApp)",
       "SEO Dasar & Kecepatan Akses Super Cepat",
-      "Domain .web.id & Hosting Gratis (1 Tahun)",
+      "Domain .my.id & Hosting Gratis (1 Tahun)",
     ],
   },
   {
@@ -43,7 +43,7 @@ const plans = [
       "Fitur CRUD Lengkap sesuai Kebutuhan",
       "Tech Stack: PHP/Laravel/CodeIgniter atau Fullstack JS",
       "Integrasi Database (MySQL / PostgreSQL)",
-      "Domain .web.id & Hosting Gratis (1 Tahun)",
+      "Domain .my.id & Hosting Gratis (1 Tahun)",
     ],
     popular: true,
   },
@@ -59,7 +59,7 @@ const plans = [
       "Integrasi API & Database Lokal",
       "UI/UX Modern & Responsif untuk Tablet & HP",
       "Notifikasi Push & Fitur Offline (Opsional)",
-      "Domain .web.id & Hosting API Gratis (1 Tahun)",
+      "Domain .my.id & Hosting API Gratis (1 Tahun)",
     ],
   },
   {
@@ -82,8 +82,8 @@ const plans = [
 const policies = [
   {
     icon: Globe,
-    title: "Hosting & Domain .web.id",
-    desc: "Semua paket sudah termasuk sewa hosting & domain .web.id selama 1 tahun secara gratis. Untuk custom domain (.com, .co.id, dll) ada biaya tambahan.",
+    title: "Hosting & Domain .my.id",
+    desc: "Semua paket sudah termasuk sewa hosting & domain .my.id selama 1 tahun secara gratis. Untuk custom domain (.com, .co.id, dll) ada biaya tambahan.",
   },
   {
     icon: RefreshCw,
@@ -107,7 +107,19 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const supabase = useMemo(() => createClient(), []);
+
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
   useEffect(() => {
     let isMounted = true;
@@ -160,7 +172,7 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between p-8 lg:p-12 relative select-none bg-[var(--bg-root)] text-[var(--silver-100)] scroll-smooth">
+    <div className="min-h-screen flex flex-col justify-between p-4 sm:p-8 lg:p-12 relative select-none bg-[var(--bg-root)] text-[var(--silver-100)] scroll-smooth">
       
       {/* ── High-Tech Cyber Grid Background ── */}
       <div 
@@ -172,8 +184,8 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
       />
 
       {/* ── Header ── */}
-      <header className="w-full max-w-7xl mx-auto flex justify-between items-center z-10 shrink-0">
-        <div className="flex items-center gap-2.5">
+      <header className="w-full max-w-7xl mx-auto flex justify-between items-center relative z-50 shrink-0">
+        <div className="flex items-center gap-2.5 relative z-50">
           <div className="w-6 h-6 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] flex items-center justify-center shadow-lg overflow-hidden shrink-0 select-none">
             <svg className="w-4 h-4" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="256" cy="256" r="246" fill="black" />
@@ -199,29 +211,30 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
         
         <div className="h-px bg-gradient-to-r from-[var(--border-subtle)] via-[var(--border-soft)] to-transparent flex-grow mx-8 hidden sm:block" />
         
-        <div className="flex items-center gap-2.5 z-10">
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-2.5 z-10">
           <a 
             href="/pricing" 
-            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-2 cursor-pointer"
+            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[11px] font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-2 cursor-pointer"
           >
             Pricing
           </a>
           <Link 
             href="/projects" 
-            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-2 cursor-pointer"
+            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[11px] font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-2 cursor-pointer"
           >
             Projects
           </Link>
           <Link 
             href="/contact" 
-            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-2 cursor-pointer"
+            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[11px] font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-2 cursor-pointer"
           >
             Contact
           </Link>
           {isLoggedIn ? (
             <Link 
               href="/profile" 
-              className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[11px] font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer"
             >
               <User className="w-3 h-3 text-[var(--silver-500)]" />
               Profile
@@ -229,9 +242,80 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
           ) : (
             <Link 
               href="/gateway" 
-              className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[11px] font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer"
             >
-              <Lock className="w-3 h-3 text-[var(--silver-500)]" />
+              Sign-in
+            </Link>
+          )}
+        </div>
+
+        {/* Mobile Hamburger Toggle Button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden p-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] text-[var(--silver-400)] hover:text-[var(--silver-100)] cursor-pointer z-50 relative transition-all active:scale-95 duration-200"
+          aria-label="Toggle Menu"
+        >
+          {mobileMenuOpen ? <X className="w-4 h-4 animate-in fade-in zoom-in-50 duration-200" /> : <Menu className="w-4 h-4 animate-in fade-in zoom-in-50 duration-200" />}
+        </button>
+
+        {/* Mobile Drawer Overlay */}
+        <div 
+          className={`fixed inset-0 z-40 md:hidden bg-black/95 backdrop-blur-xl flex flex-col justify-center items-center gap-6 transition-all duration-300 ease-in-out ${
+            mobileMenuOpen 
+              ? "opacity-100 translate-y-0 pointer-events-auto" 
+              : "opacity-0 -translate-y-4 pointer-events-none"
+          }`}
+        >
+          <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[var(--silver-400)] mb-2 select-none">
+            — navigation
+          </span>
+          <a 
+            href="/pricing"
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-lg font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-white transition-colors"
+          >
+            Pricing
+          </a>
+          <Link 
+            href="/projects"
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-lg font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-white transition-colors"
+          >
+            Projects
+          </Link>
+          <Link 
+            href="/contact"
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-lg font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-white transition-colors"
+          >
+            Contact
+          </Link>
+          {isLoggedIn ? (
+            <>
+              <Link 
+                href="/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-lg font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-white transition-colors flex items-center gap-2"
+              >
+                <User className="w-4 h-4 text-[var(--silver-500)]" />
+                Profile
+              </Link>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLogout();
+                }}
+                className="mt-4 px-4 py-2 rounded-xl text-xs font-mono tracking-widest uppercase border border-red-900/30 bg-red-950/10 text-red-400 hover:text-red-300 cursor-pointer transition-all"
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <Link 
+              href="/gateway"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-lg font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-white transition-colors flex items-center gap-2"
+            >
               Sign-in
             </Link>
           )}
@@ -305,7 +389,7 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
                     </div>
                   );
 
-                  const commonClasses = `card p-6.5 rounded-2xl flex flex-col justify-between h-[215px] relative overflow-hidden select-none border border-[var(--border-subtle)] ${
+                  const commonClasses = `card p-6.5 rounded-2xl flex flex-col justify-between min-h-[215px] h-full relative overflow-hidden select-none border border-[var(--border-subtle)] ${
                     IsActive 
                       ? "group cursor-pointer hover:border-[var(--border-silver)] hover:bg-[var(--bg-elevated)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.6)]" 
                       : "cursor-not-allowed opacity-50 bg-[var(--bg-surface)]"
@@ -347,7 +431,7 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
                 {Array.from({ length: placeholdersNeeded }).map((_, i) => (
                   <div 
                     key={`placeholder-${i}`} 
-                    className="p-6.5 rounded-2xl border border-dashed border-[var(--border-soft)] bg-[rgba(10,10,14,0.15)] flex flex-col items-center justify-center gap-2.5 text-center text-[9.5px] font-black uppercase tracking-[0.25em] font-mono text-[var(--silver-700)] select-none h-[215px]"
+                    className="p-6.5 rounded-2xl border border-dashed border-[var(--border-soft)] bg-[rgba(10,10,14,0.15)] flex flex-col items-center justify-center gap-2.5 text-center text-[9.5px] font-black uppercase tracking-[0.25em] font-mono text-[var(--silver-700)] select-none min-h-[215px] h-full"
                   >
                     <Plus className="w-4 h-4 text-[var(--silver-700)] opacity-60" />
                     <span>Project Incoming</span>
@@ -520,26 +604,17 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
       </section>
 
       {/* ── Footer ── */}
-      <footer className="w-full max-w-7xl mx-auto border-t border-[var(--border-subtle)] pt-6 flex justify-between items-end z-10 shrink-0 select-none">
+      <footer className="w-full max-w-7xl mx-auto border-t border-[var(--border-subtle)] pt-6 flex flex-col sm:flex-row justify-between items-center sm:items-end gap-6 z-10 shrink-0 select-none text-center sm:text-left">
         <div className="space-y-2.5">
           <div className="text-[9px] font-black uppercase tracking-wider text-[var(--silver-600)] font-mono">
             &copy; {currentYear} SukaMCD. All rights reserved.
           </div>
-          <div className="flex gap-5">
+          <div className="flex justify-center sm:justify-start gap-5">
             <a href="https://github.com/SukaMCD" className="text-[9px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">Github</a>
             <a href="https://www.instagram.com/sukamcd.dev/" className="text-[9px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">Instagram</a>
             <a href="https://www.linkedin.com/in/fabianrizkypratama/" className="text-[9px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">LinkedIn</a>
           </div>
         </div>
-        
-        {/* ── Visible Gateway Console Login ── */}
-        <Link 
-          href="/gateway" 
-          className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-500)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-md select-none"
-        >
-          <Lock className="w-3 h-3 text-[var(--silver-500)]" />
-          Console
-        </Link>
       </footer>
     </div>
   );
