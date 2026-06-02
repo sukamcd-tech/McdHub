@@ -429,3 +429,37 @@ input:-webkit-autofill:active {
   -webkit-text-fill-color: var(--silver-200) !important;
   transition: background-color 5000s ease-in-out 0s;
 }
+
+/* ============================================================
+   CLOUDFLARE TURNSTILE RESPONSIVENESS
+   ============================================================ */
+.cf-turnstile-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+#turnstile-container {
+  transform-origin: center center;
+  transition: transform 0.2s ease;
+}
+
+@media (max-width: 380px) {
+  #turnstile-container {
+    transform: scale(0.9);
+  }
+}
+
+@media (max-width: 350px) {
+  #turnstile-container {
+    transform: scale(0.8) !important;
+  }
+}
+
+@media (max-width: 320px) {
+  #turnstile-container {
+    transform: scale(0.7) !important;
+  }
+}

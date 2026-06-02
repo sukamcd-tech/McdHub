@@ -145,20 +145,23 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center py-12 px-6 relative overflow-y-auto select-none bg-[var(--bg-root)]">
-      {/* ── High-Tech Cyber Grid Background ── */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,212,216,0.02)_0%,transparent_75%)] pointer-events-none" />
-      <div 
-        className="absolute inset-0 opacity-[0.02] pointer-events-none"
-        style={{
-          backgroundImage: `radial-gradient(var(--silver-400) 1px, transparent 1px)`,
-          backgroundSize: '24px 24px'
-        }}
-      />
-      
-      {/* ── Visual Ambient Glows ── */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-[var(--silver-glow)] blur-[100px] pointer-events-none opacity-40" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-zinc-900/20 blur-[100px] pointer-events-none opacity-40" />
+    <div className="min-h-[100dvh] w-full flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 relative overflow-x-hidden select-none bg-[var(--bg-root)]">
+      {/* ── Background Wrapper to prevent scrolling/overflow ── */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {/* ── High-Tech Cyber Grid Background ── */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,212,216,0.02)_0%,transparent_75%)]" />
+        <div 
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: `radial-gradient(var(--silver-400) 1px, transparent 1px)`,
+            backgroundSize: '24px 24px'
+          }}
+        />
+        
+        {/* ── Visual Ambient Glows ── */}
+        <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-[var(--silver-glow)] blur-[100px] opacity-40" />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-zinc-900/20 blur-[100px] opacity-40" />
+      </div>
 
       <div className="w-full max-w-[440px] z-10 space-y-7 animate-in fade-in zoom-in-95 duration-700">
         
@@ -177,7 +180,7 @@ export default function RegisterPage() {
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--silver-400)] to-transparent opacity-20" />
 
           {!success ? (
-            <form onSubmit={handleRegister} className="p-7 space-y-4">
+            <form onSubmit={handleRegister} className="p-5 sm:p-7 space-y-4">
               
               {/* Full Name field */}
               <div className="space-y-1.5">
@@ -279,8 +282,10 @@ export default function RegisterPage() {
                 <label className="block text-[9px] font-black uppercase tracking-widest text-[var(--silver-500)] font-mono ml-1">
                   Anti-Bot Verification
                 </label>
-                <div className="flex justify-center p-3 rounded-xl bg-black/30 border border-[var(--border-soft)]">
-                  <div id="turnstile-container" className="cf-turnstile"></div>
+                <div className="flex justify-center p-3 rounded-xl bg-black/30 border border-[var(--border-soft)] overflow-hidden">
+                  <div className="cf-turnstile-wrapper">
+                    <div id="turnstile-container" className="cf-turnstile"></div>
+                  </div>
                 </div>
               </div>
 
@@ -354,7 +359,7 @@ export default function RegisterPage() {
               </div>
             </form>
           ) : (
-            <div className="p-8 text-center space-y-5 animate-in fade-in duration-500 select-text">
+            <div className="p-6 sm:p-8 text-center space-y-5 animate-in fade-in duration-500 select-text">
               <div className="w-12 h-12 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-soft)] flex items-center justify-center mx-auto shadow-lg">
                 <CheckCircle className="w-6 h-6 text-emerald-400" />
               </div>
