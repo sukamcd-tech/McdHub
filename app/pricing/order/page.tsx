@@ -41,7 +41,7 @@ const plans = {
   "web-erp": {
     id: "web-erp",
     name: "Sistem ERP / Enterprise",
-    price: "Rp 5,0jt - 10,0jt",
+    price: "Rp 7,5jt - 10,0jt",
     description: "Sistem manajemen bisnis terintegrasi (stok, keuangan, SDM, atau absensi). Kompleksitas tinggi, role-based access.",
     addons: [
       { id: "playstore", label: "Aplikasi Pendamping Android (Rilis Play Store)", desc: "Menambahkan dan merilis aplikasi pendamping Android untuk staff/klien ke Play Store" },

@@ -65,7 +65,7 @@ const plans = [
   {
     id: "web-erp",
     name: "Sistem ERP / Enterprise",
-    price: "Rp 5,0jt - 10,0jt",
+    price: "Rp 7,5jt - 10,0jt",
     description: "Sistem manajemen bisnis terintegrasi berskala besar untuk efisiensi operasional.",
     badge: "Enterprise",
     features: [
