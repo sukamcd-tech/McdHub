@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -34,12 +34,35 @@ export async function middleware(request: NextRequest) {
       url.pathname = '/gateway'
       return NextResponse.redirect(url)
     }
+
+    // Ambil profile untuk cek role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || profile.role !== 'admin') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
   }
 
-  // Redirect ke dashboard jika sudah login dan akses /gateway
+  // Redirect jika sudah login dan akses /gateway
   if (request.nextUrl.pathname === '/gateway' && user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
     const url = request.nextUrl.clone()
-    url.pathname = '/admin/dashboard'
+    if (profile?.role === 'admin') {
+      url.pathname = '/admin/dashboard'
+    } else {
+      url.pathname = '/'
+    }
     return NextResponse.redirect(url)
   }
 

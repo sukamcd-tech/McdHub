@@ -1,17 +1,20 @@
 import { createServerSupabaseClient } from "@/lib/supabase-server";
-import AdminProfileClient from "@/components/admin/AdminProfileClient";
+import ClientProfileClient from "@/components/ClientProfileClient";
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Admin Profile | SukaMCD",
-  description: "Manage your administrative identity and security settings.",
+  title: "Profile | SukaMCD",
+  description: "Manage your client identity and security settings.",
 };
 
-export default async function ProfilePage() {
+export default async function ClientProfilePage() {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) return null;
+  if (!user) {
+    redirect("/gateway");
+  }
 
   // Fetch profile matching the authenticated user
   let { data: profile, error } = await supabase
@@ -20,7 +23,7 @@ export default async function ProfilePage() {
     .eq("id", user.id)
     .single();
 
-  // Jika profil belum ada (kemungkinan user lama sebelum ada trigger)
+  // Jika profil belum ada (kemungkinan desync)
   if (!profile || error) {
     const { data: newProfile, error: createError } = await supabase
       .from("profiles")
@@ -46,9 +49,16 @@ export default async function ProfilePage() {
     profile = newProfile;
   }
 
-  return (
-    <div className="p-4">
-      <AdminProfileClient profile={profile} userEmail={user.email || ""} />
-    </div>
-  );
+  // Fetch orders matching the authenticated user
+  const { data: orders, error: ordersError } = await supabase
+    .from("orders")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (ordersError) {
+    console.error("Error fetching orders:", ordersError);
+  }
+
+  return <ClientProfileClient profile={profile} userEmail={user.email || ""} orders={orders || []} />;
 }

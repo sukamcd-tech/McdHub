@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, Search, Plus, Laptop, X, Lock } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Search, Plus, Laptop, X, Lock, User } from "lucide-react";
+import { createClient } from "@/lib/supabase";
 
 interface Project {
   id: string;
@@ -17,6 +18,36 @@ export default function ProjectsClient({ initialProjects }: { initialProjects: P
   const currentYear = new Date().getFullYear();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const supabase = useMemo(() => createClient(), []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function initializeAuth() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (isMounted) {
+          setIsLoggedIn(!!session);
+        }
+      } catch (error) {
+        console.error('Error loading session:', error);
+      }
+    }
+
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isMounted) {
+        setIsLoggedIn(!!session);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription?.unsubscribe();
+    };
+  }, [supabase]);
 
   // Dynamically extract unique categories and uppercase them
   const categories = [
@@ -65,13 +96,23 @@ export default function ProjectsClient({ initialProjects }: { initialProjects: P
         
         <div className="h-px bg-gradient-to-r from-[var(--border-subtle)] via-[var(--border-soft)] to-transparent flex-grow mx-8 hidden sm:block" />
         
-        <Link 
-          href="/gateway" 
-          className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10"
-        >
-          <Lock className="w-3 h-3 text-[var(--silver-500)]" />
-          Sign-in
-        </Link>
+        {isLoggedIn ? (
+          <Link 
+            href="/profile" 
+            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10"
+          >
+            <User className="w-3 h-3 text-[var(--silver-500)]" />
+            Profile
+          </Link>
+        ) : (
+          <Link 
+            href="/gateway" 
+            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10"
+          >
+            <Lock className="w-3 h-3 text-[var(--silver-500)]" />
+            Sign-in
+          </Link>
+        )}
       </header>
 
       {/* ── Main Section ── */}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
-import { ArrowUpRight, Plus, Laptop, Check, Sparkles, Globe, RefreshCw, ShieldCheck, AlertCircle, ChevronDown, Lock } from "lucide-react";
+import { ArrowUpRight, Plus, Laptop, Check, Sparkles, Globe, RefreshCw, ShieldCheck, AlertCircle, ChevronDown, Lock, User } from "lucide-react";
 
 interface Project {
   id: string;
@@ -209,14 +209,13 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
             Contact
           </Link>
           {isLoggedIn ? (
-            <button
-              type="button"
-              onClick={handleLogout}
+            <Link 
+              href="/profile" 
               className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer"
             >
-              <Lock className="w-3 h-3 text-[var(--silver-500)]" />
-              Logout
-            </button>
+              <User className="w-3 h-3 text-[var(--silver-500)]" />
+              Profile
+            </Link>
           ) : (
             <Link 
               href="/gateway" 

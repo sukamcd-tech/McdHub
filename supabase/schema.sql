@@ -19,7 +19,7 @@ CREATE TABLE public.profiles (
   name        TEXT,
   username    TEXT UNIQUE,
   phone_number TEXT,
-  role        TEXT NOT NULL DEFAULT 'admin',
+  role        TEXT NOT NULL DEFAULT 'client',
   bio         TEXT,
   profile_picture TEXT,
   created_at  TIMESTAMPTZ DEFAULT NOW(),
@@ -186,3 +186,44 @@ CREATE POLICY "Allow public insert feedback"
 CREATE POLICY "Allow authenticated users full access to feedback"
   ON public.feedbacks FOR ALL
   USING (auth.role() = 'authenticated');
+
+
+-- =====================================================
+-- 7. ORDERS - Project Orders History
+-- =====================================================
+CREATE TABLE public.orders (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  user_email   TEXT NOT NULL,
+  package_id   TEXT NOT NULL,
+  package_name TEXT NOT NULL,
+  price        TEXT NOT NULL,
+  whatsapp     TEXT NOT NULL,
+  specs        TEXT NOT NULL,
+  addons       TEXT[] DEFAULT '{}',
+  description  TEXT NOT NULL,
+  status       TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'cancelled')),
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+
+-- Policies for orders
+CREATE POLICY "Users can view their own orders"
+  ON public.orders FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own orders"
+  ON public.orders FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Admin can access all orders"
+  ON public.orders FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = auth.uid() AND profiles.role = 'admin'
+    )
+  );

@@ -31,6 +31,7 @@ export async function updateProfile(formData: FormData) {
   }
 
   revalidatePath("/admin/profile");
+  revalidatePath("/profile");
   return { success: true };
 }
 
@@ -74,5 +75,6 @@ export async function updateAvatarUrl(url: string) {
   }
 
   revalidatePath("/admin/profile");
+  revalidatePath("/profile");
   return { success: true };
 }

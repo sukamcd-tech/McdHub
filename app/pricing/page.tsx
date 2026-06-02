@@ -2,7 +2,7 @@
 
 import Link from "next/link";import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase";import { ArrowLeft, Check, Sparkles, AlertCircle, ShieldCheck, RefreshCw, Globe, HelpCircle, Lock } from "lucide-react";
+import { createClient } from "@/lib/supabase";import { ArrowLeft, Check, Sparkles, AlertCircle, ShieldCheck, RefreshCw, Globe, HelpCircle, Lock, User } from "lucide-react";
 import { motion } from "framer-motion";
 
 const plans = [
@@ -149,13 +149,23 @@ export default function PricingPage() {
           </span>
         </Link>
         <div className="h-px bg-gradient-to-r from-[var(--border-subtle)] via-[var(--border-soft)] to-transparent flex-grow mx-8 hidden sm:block" />
-        <Link 
-          href="/gateway" 
-          className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10"
-        >
-          <Lock className="w-3 h-3 text-[var(--silver-500)]" />
-          Sign-in
-        </Link>
+        {isLoggedIn ? (
+          <Link 
+            href="/profile" 
+            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10"
+          >
+            <User className="w-3 h-3 text-[var(--silver-500)]" />
+            Profile
+          </Link>
+        ) : (
+          <Link 
+            href="/gateway" 
+            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10"
+          >
+            <Lock className="w-3 h-3 text-[var(--silver-500)]" />
+            Sign-in
+          </Link>
+        )}
       </header>
 
       {/* ── Main Section ── */}
@@ -173,14 +183,7 @@ export default function PricingPage() {
           <p className="text-[12px] text-[var(--silver-500)] max-w-xl font-light leading-relaxed">
             Transparan, kompetitif, dan dirancang khusus untuk mewujudkan ide digital Anda dengan standar performa dan kualitas visual terbaik.
           </p>
-          <p className="text-[10px] text-[var(--silver-500)]">
-            {!authChecked
-              ? "Memeriksa status login..."
-              : isLoggedIn
-              ? "Anda sudah login, silakan pilih paket."
-              : "Silakan login dulu sebelum pesan paket."
-            }
-          </p>
+
         </div>
 
         {/* Pricing Cards Grid */}

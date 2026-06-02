@@ -17,9 +17,13 @@ export default async function AdminLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("profile_picture")
+    .select("profile_picture, role")
     .eq("id", user.id)
     .single();
+
+  if (!profile || profile.role !== "admin") {
+    redirect("/");
+  }
 
   return (
     <div className="flex h-screen overflow-hidden text-zinc-100" style={{ background: "var(--bg-root)" }}>

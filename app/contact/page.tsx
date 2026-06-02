@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { ArrowLeft, Mail, MapPin, Clock, Send, Loader2, CheckCircle } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { ArrowLeft, Mail, MapPin, Clock, Send, Loader2, CheckCircle, Lock, User } from 'lucide-react'
 import Link from 'next/link'
 
 import { createMobileClient } from '@/lib/supabase'
@@ -13,6 +13,37 @@ export default function ContactPage() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const supabase = useMemo(() => createMobileClient(), [])
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function initializeAuth() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (isMounted) {
+          setIsLoggedIn(!!session)
+        }
+      } catch (error) {
+        console.error('Error loading session:', error)
+      }
+    }
+
+    initializeAuth()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isMounted) {
+        setIsLoggedIn(!!session)
+      }
+    })
+
+    return () => {
+      isMounted = false
+      subscription?.unsubscribe()
+    }
+  }, [supabase])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -90,6 +121,24 @@ export default function ContactPage() {
         </Link>
         
         <div className="h-px bg-gradient-to-r from-[var(--border-subtle)] via-[var(--border-soft)] to-transparent flex-grow mx-8 hidden sm:block" />
+
+        {isLoggedIn ? (
+          <Link 
+            href="/profile" 
+            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10"
+          >
+            <User className="w-3 h-3 text-[var(--silver-500)]" />
+            Profile
+          </Link>
+        ) : (
+          <Link 
+            href="/gateway" 
+            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10"
+          >
+            <Lock className="w-3 h-3 text-[var(--silver-500)]" />
+            Sign-in
+          </Link>
+        )}
       </header>
 
       {/* ── Main ── */}

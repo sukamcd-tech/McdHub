@@ -189,7 +189,7 @@ function OrderFormContent() {
     setLoading(true);
 
     try {
-      const supabase = createMobileClient();
+      const supabase = createClient();
 
       let os = "Unknown";
       if (typeof window !== "undefined" && window.navigator) {
@@ -229,37 +229,36 @@ Ketentuan Umum:
 - Free revisi tampilan 2x
 - Garansi Bug/Error 3 Bulan`;
 
-      const { error, data } = await supabase
-        .from("feedbacks")
+      // Insert into orders history for the authenticated client user
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      if (!userId) {
+        throw new Error("User tidak terautentikasi.");
+      }
+
+      const { data: orderData, error: orderError } = await supabase
+        .from("orders")
         .insert([
           {
+            user_id: userId,
             user_email: email,
-            type: "saran",
-            priority: "tinggi",
-            description: formattedDescription,
-            device_info: {
-              os: os,
-              model: "Web Browser",
-              os_version: "Web",
-              order_details: {
-                package: currentPlan.id,
-                package_name: currentPlan.name,
-                whatsapp: whatsapp,
-                addons: selectedAddons,
-                specs: getSpecSummary(false)
-              }
-            },
-            app_version: "1.0.0",
-            status: "open",
+            package_id: currentPlan.id,
+            package_name: currentPlan.name,
+            price: currentPlan.price,
+            whatsapp: whatsapp,
+            specs: getSpecSummary(false),
+            addons: selectedAddons,
+            description: description,
+            status: "pending",
             created_at: new Date().toISOString()
           }
         ])
         .select();
 
-      if (error) throw error;
+      if (orderError) throw orderError;
 
       setSubmitted(true);
-      setOrderId(data?.[0]?.id || "SUCCESS");
+      setOrderId(orderData?.[0]?.id || "SUCCESS");
     } catch (err) {
       console.error("Error submitting order:", err);
       alert("Gagal mengirim pesanan. Silakan coba lagi.");
@@ -407,9 +406,9 @@ Ketentuan Umum:
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                readOnly
                 required
-                className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-[var(--bg-surface)] border border-[var(--border-soft)] text-[var(--silver-100)] focus:border-[var(--border-silver)] focus:outline-none focus:bg-[var(--bg-elevated)] transition-all duration-200 placeholder-[var(--silver-700)]"
+                className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-[var(--bg-surface)] border border-[var(--border-soft)] text-[var(--silver-500)] focus:outline-none transition-all duration-200 placeholder-[var(--silver-700)] cursor-default caret-transparent opacity-70"
                 placeholder="you@email.com"
               />
             </div>
