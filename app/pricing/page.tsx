@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowLeft, Check, Sparkles, AlertCircle, ShieldCheck, RefreshCw, Globe, HelpCircle, Lock } from "lucide-react";
+import Link from "next/link";import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";import { ArrowLeft, Check, Sparkles, AlertCircle, ShieldCheck, RefreshCw, Globe, HelpCircle, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 
 const plans = [
@@ -96,6 +97,35 @@ const policies = [
 ];
 
 export default function PricingPage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const supabase = useMemo(() => createClient(), []);
+  const router = useRouter();
+
+  useEffect(() => {
+    async function loadSession() {
+      const { data } = await supabase.auth.getSession();
+      setIsLoggedIn(!!data.session);
+      setAuthChecked(true);
+    }
+
+    loadSession();
+  }, [supabase]);
+
+  const handleSelectPlan = (planId: string) => {
+    const orderPath = `/pricing/order?package=${planId}`;
+    if (!authChecked) {
+      return;
+    }
+
+    if (!isLoggedIn) {
+      router.push(`/gateway?redirect=${encodeURIComponent(orderPath)}`);
+      return;
+    }
+
+    router.push(orderPath);
+  };
+
   return (
     <div className="min-h-screen flex flex-col justify-between p-8 lg:p-12 relative bg-[var(--bg-root)] text-[var(--silver-100)] selection:bg-white selection:text-black">
       
@@ -142,6 +172,14 @@ export default function PricingPage() {
           </h1>
           <p className="text-[12px] text-[var(--silver-500)] max-w-xl font-light leading-relaxed">
             Transparan, kompetitif, dan dirancang khusus untuk mewujudkan ide digital Anda dengan standar performa dan kualitas visual terbaik.
+          </p>
+          <p className="text-[10px] text-[var(--silver-500)]">
+            {!authChecked
+              ? "Memeriksa status login..."
+              : isLoggedIn
+              ? "Anda sudah login, silakan pilih paket."
+              : "Silakan login dulu sebelum pesan paket."
+            }
           </p>
         </div>
 
@@ -201,16 +239,17 @@ export default function PricingPage() {
 
                 {/* Select Button */}
                 <div className="mt-8">
-                  <Link
-                    href={`/pricing/order?package=${plan.id}`}
-                    className={`w-full py-2.5 rounded-xl text-[10px] font-mono tracking-[0.15em] font-black uppercase flex items-center justify-center transition-all duration-200 cursor-pointer ${
+                  <button
+                    type="button"
+                    onClick={() => handleSelectPlan(plan.id)}
+                    className={`w-full py-2.5 rounded-xl text-[10px] font-mono tracking-[0.15em] font-black uppercase flex items-center justify-center transition-all duration-200 ${
                       plan.popular
                         ? "bg-[var(--silver-200)] text-[#0f0f13] hover:bg-[var(--silver-100)] shadow-lg hover:shadow-[0_0_16px_rgba(212,212,216,0.2)]"
                         : "bg-[var(--bg-root)] text-[var(--silver-300)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] hover:text-white"
                     }`}
                   >
                     Pilih Paket
-                  </Link>
+                  </button>
                 </div>
               </motion.div>
             );
@@ -233,12 +272,13 @@ export default function PricingPage() {
             </p>
           </div>
           
-          <Link
-            href="/pricing/order?package=student"
+          <button
+            type="button"
+            onClick={() => handleSelectPlan('student')}
             className="px-6 py-3 rounded-xl bg-[var(--silver-200)] text-[#0f0f13] text-[10px] font-mono tracking-[0.15em] font-black uppercase hover:bg-[var(--silver-100)] shadow-lg hover:shadow-[0_0_16px_rgba(212,212,216,0.18)] transition-all shrink-0 cursor-pointer text-center w-full md:w-auto font-bold"
           >
             Ajukan Paket Pelajar
-          </Link>
+          </button>
         </div>
 
         {/* ── Policy & Warranty Section ── */}

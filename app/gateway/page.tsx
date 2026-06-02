@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { Lock, Mail, ShieldAlert, ArrowLeft, Cpu, Loader2, KeyRound, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
@@ -15,6 +15,8 @@ export default function GatewayPage() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectParam = searchParams.get('redirect') || '/admin/dashboard'
   const supabase = createClient()
   const isGoogleOAuthEnabled = process.env.NEXT_PUBLIC_SUPABASE_GOOGLE_OAUTH_ENABLED === 'true'
 
@@ -102,7 +104,7 @@ export default function GatewayPage() {
       return
     }
 
-    router.push('/admin/dashboard')
+    router.push(redirectParam)
     router.refresh()
   }
 
@@ -117,7 +119,7 @@ export default function GatewayPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectParam)}`
       }
     })
     if (error) {

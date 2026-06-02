@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Send, Loader2, CheckCircle, Globe, Smartphone, ShieldCheck, RefreshCw } from "lucide-react";
-import { createMobileClient } from "@/lib/supabase";
+import { createClient, createMobileClient } from "@/lib/supabase";
 
 // SILAKAN UBAH NOMOR WHATSAPP DI SINI (Gunakan kode negara, tanpa '+' atau '0' di depan. Contoh: 6281234567890)
 const WHATSAPP_NUMBER = "6281234567890";
@@ -67,6 +67,10 @@ function OrderFormContent() {
   const [selectedPlanId, setSelectedPlanId] = useState(packageParam);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
   const [whatsapp, setWhatsapp] = useState("");
   const [description, setDescription] = useState("");
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
@@ -96,7 +100,33 @@ function OrderFormContent() {
     }
   }, [packageParam]);
 
+  useEffect(() => {
+    async function checkAuth() {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        router.push(`/gateway?redirect=${encodeURIComponent(`/pricing/order?package=${packageParam}`)}`);
+        return;
+      }
+
+      setIsLoggedIn(true);
+      setAuthChecked(true);
+      if (!email && data.session.user.email) {
+        setEmail(data.session.user.email);
+      }
+    }
+
+    checkAuth();
+  }, [packageParam, router, supabase, email]);
+
   const currentPlan = plans[selectedPlanId as keyof typeof plans] || plans.static;
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center text-sm text-[var(--silver-500)]">
+        Memeriksa status login...
+      </div>
+    );
+  }
 
   const handleAddonToggle = (addonId: string) => {
     setSelectedAddons((prev) =>
