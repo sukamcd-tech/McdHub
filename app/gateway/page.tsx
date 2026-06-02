@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { Lock, Mail, ShieldAlert, ArrowLeft, Cpu, Loader2, KeyRound, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 
-export default function GatewayPage() {
+function GatewayContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -320,5 +320,22 @@ export default function GatewayPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function GatewayPage() {
+  return (
+    <Suspense fallback={
+      <div className="fixed inset-0 w-full h-screen flex items-center justify-center p-6 bg-[var(--bg-root)]">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <Loader2 className="w-6 h-6 animate-spin text-[var(--silver-400)] shrink-0" />
+          <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--silver-500)]">
+            Loading Gateway...
+          </span>
+        </div>
+      </div>
+    }>
+      <GatewayContent />
+    </Suspense>
   )
 }
