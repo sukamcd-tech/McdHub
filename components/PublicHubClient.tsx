@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";
 import { ArrowUpRight, Plus, Laptop, Check, Sparkles, Globe, RefreshCw, ShieldCheck, AlertCircle, ChevronDown, Lock } from "lucide-react";
 
 interface Project {
@@ -103,6 +105,30 @@ const policies = [
 export default function PublicHubClient({ initialProjects }: { initialProjects: Project[] }) {
   const currentYear = new Date().getFullYear();
   const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const supabase = useMemo(() => createClient(), []);
+
+  useEffect(() => {
+    async function loadSession() {
+      const { data } = await supabase.auth.getSession();
+      setIsLoggedIn(!!data.session);
+    }
+
+    loadSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
+    });
+
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/");
+  };
 
   return (
     <div className="min-h-screen flex flex-col justify-between p-8 lg:p-12 relative select-none bg-[var(--bg-root)] text-[var(--silver-100)] scroll-smooth">
@@ -163,13 +189,24 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
           >
             Contact
           </Link>
-          <Link 
-            href="/gateway" 
-            className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer"
-          >
-            <Lock className="w-3 h-3 text-[var(--silver-500)]" />
-            Sign-in
-          </Link>
+          {isLoggedIn ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer"
+            >
+              <Lock className="w-3 h-3 text-[var(--silver-500)]" />
+              Logout
+            </button>
+          ) : (
+            <Link 
+              href="/gateway" 
+              className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[9px] font-mono tracking-[0.15em] text-[var(--silver-400)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-1.5 cursor-pointer"
+            >
+              <Lock className="w-3 h-3 text-[var(--silver-500)]" />
+              Sign-in
+            </Link>
+          )}
         </div>
       </header>
 
