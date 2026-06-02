@@ -1,8 +1,25 @@
 'use client'
 
+import type { Metadata } from 'next'
 import { useState, useEffect, useMemo } from 'react'
 import { ArrowLeft, Mail, MapPin, Clock, Send, Loader2, CheckCircle, Lock, User } from 'lucide-react'
 import Link from 'next/link'
+
+export const metadata: Metadata = {
+  title: "SukaMCD | Contact",
+  description: "Reach out to SukaMCD for project inquiries, collaborations, and support.",
+  openGraph: {
+    title: "SukaMCD | Contact",
+    description: "Reach out to SukaMCD for project inquiries, collaborations, and support.",
+    type: "website",
+    url: "https://sukamcd.dev/contact",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SukaMCD | Contact",
+    description: "Reach out to SukaMCD for project inquiries, collaborations, and support.",
+  },
+};
 
 import { createMobileClient } from '@/lib/supabase'
 

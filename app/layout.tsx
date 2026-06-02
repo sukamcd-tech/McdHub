@@ -10,6 +10,17 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "SukaMCD | Central Project Hub",
   description: "A curated collection of digital experiences and experiments by SukaMCD.",
+  openGraph: {
+    title: "SukaMCD | Central Project Hub",
+    description: "A curated collection of digital experiences and experiments by SukaMCD.",
+    type: "website",
+    url: "https://sukamcd.dev",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SukaMCD | Central Project Hub",
+    description: "A curated collection of digital experiences and experiments by SukaMCD.",
+  },
 };
 
 export default function RootLayout({
