@@ -23,20 +23,15 @@ export default function GatewayPage() {
 
     // Define Turnstile render callback globally
     (window as any).onloadTurnstileCallback = () => {
-      if ((window as any).turnstile) {
-        const isLocalhost = typeof window !== 'undefined' && 
-          (window.location.hostname === 'localhost' || 
-           window.location.hostname === '127.0.0.1' || 
-           window.location.hostname.endsWith('.test'));
+      const container = document.getElementById('turnstile-container')
 
-        const resolvedSiteKey = isLocalhost 
-          ? '2x00000000000000000000AB' // Fallback to test key for local development
-          : (loadedKey || '2x00000000000000000000AB');
+      if ((window as any).turnstile && container && loadedKey) {
+        if (container.hasChildNodes()) {
+          return
+        }
 
-        console.log("SukaMCD Turnstile Site Key resolved:", resolvedSiteKey);
-
-        (window as any).turnstile.render('#turnstile-container', {
-          sitekey: resolvedSiteKey,
+        (window as any).turnstile.render(container, {
+          sitekey: loadedKey,
           theme: 'dark',
           callback: (token: string) => {
             setTurnstileToken(token)
@@ -49,6 +44,8 @@ export default function GatewayPage() {
             console.warn("Cloudflare Turnstile failed to load or verify.");
           }
         })
+      } else if (!loadedKey) {
+        setError('Turnstile site key is not configured.')
       }
     }
 
