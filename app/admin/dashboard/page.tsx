@@ -9,9 +9,11 @@ import {
   MoveRight,
   Bug,
   Lightbulb,
-  MessageSquare
+  MessageSquare,
+  Sparkles
 } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getProjects } from "@/lib/actions/project-actions";
 import { getDashboardStats } from "@/lib/actions/dashboard-actions";
 
@@ -20,6 +22,10 @@ export default async function DashboardPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/gateway");
+  }
 
   const [projects, dashResult] = await Promise.all([
     getProjects(),
@@ -446,6 +452,35 @@ export default async function DashboardPage() {
         </div>
         
       </div>
+
+      {/* ── Pricing Plans Overview Card ── */}
+      <div
+        className="flex flex-col md:flex-row md:items-center justify-between gap-5 p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-soft)] transition-all select-none"
+      >
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div
+            className="p-2.5 rounded-lg shrink-0 bg-[var(--bg-elevated)] border border-[var(--border-soft)]"
+          >
+            <Sparkles className="w-5 h-5 text-[var(--silver-400)]" />
+          </div>
+          <div>
+            <h2 className="text-xs font-black uppercase tracking-widest font-mono text-[var(--silver-200)]">
+              Pricing Plans Configurator
+            </h2>
+            <p className="text-[11px] font-medium text-[var(--silver-600)] mt-0.5 leading-relaxed">
+              Daftar penawaran harga aktif untuk pengembangan proyek digital (Static Web, CMS, Android, ERP).
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/pricing"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest font-mono transition-all bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--silver-500)] hover:border-[var(--border-silver)] hover:text-[var(--silver-200)] shrink-0"
+        >
+          View Pricing Page <MoveRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+
     </div>
   );
 }
