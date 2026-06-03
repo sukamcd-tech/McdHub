@@ -434,7 +434,7 @@ export default function DownloadClient({ initialRelease, initialDownloadCount }:
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in fade-in duration-700 delay-200">
           {[
             { icon: Shield, title: 'Data Aman', desc: 'Semua data keuangan dienkripsi dan disimpan di Supabase. Tidak ada pihak ketiga yang mengakses data pribadimu.' },
-            { icon: CheckCircle2, title: 'Open Build', desc: 'APK dibangun langsung dari source code Flutter di repositori SukaMCD/McdWallet di GitHub.' },
+            { icon: CheckCircle2, title: 'Open Build', desc: 'APK dibangun langsung dari source code Flutter di repositori sukamcd-tech/McdWallet di GitHub.' },
             { icon: ExternalLink, title: 'Sumber Terbuka', desc: 'Kode sumber tersedia publik di GitHub. Kamu bisa audit, fork, atau berkontribusi sesuai keinginan.' },
           ].map(item => {
             const Icon = item.icon
@@ -460,7 +460,7 @@ export default function DownloadClient({ initialRelease, initialDownloadCount }:
           </div>
           <div className="flex gap-5 justify-center sm:justify-start">
             <Link href="/projects/mcdwallet" className="text-[9px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-white transition-colors">← Kembali</Link>
-            <a href="https://github.com/SukaMCD/McdWallet" className="text-[9px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a href="https://github.com/sukamcd-tech/McdWallet" className="text-[9px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">GitHub</a>
           </div>
         </div>
         <Link href="/" className="text-[9.5px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-[var(--silver-100)] transition-colors border-b border-[var(--border-subtle)] pb-0.5 shrink-0">
