@@ -110,7 +110,7 @@ export default function McdWalletPage() {
       
       {/* Dot Grid Background */}
       <div 
-        className="fixed inset-0 opacity-[0.015] pointer-events-none z-0"
+        className="fixed inset-0 opacity-[0.018] pointer-events-none z-0"
         style={{
           backgroundImage: `radial-gradient(var(--silver-500) 1px, transparent 1px)`,
           backgroundSize: '40px 40px'
@@ -118,7 +118,7 @@ export default function McdWalletPage() {
       />
 
       {/* ── Header ── */}
-      <header className="w-full max-w-6xl mx-auto px-8 lg:px-12 pt-7 pb-0 flex justify-between items-center z-10 shrink-0 relative">
+      <header className="w-full max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 pt-7 pb-0 flex justify-between items-center z-10 shrink-0 relative">
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="w-6 h-6 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] flex items-center justify-center shadow-lg group-hover:border-[var(--border-silver)] transition-all">
             <ArrowLeft className="w-3 h-3 text-[var(--silver-500)] group-hover:text-[var(--silver-200)] transition-colors" />
@@ -142,7 +142,7 @@ export default function McdWalletPage() {
       </header>
 
       {/* ── Main ── */}
-      <main className="w-full max-w-6xl mx-auto px-8 lg:px-12 z-10 flex flex-col gap-20 pb-24 mt-16 relative">
+      <main className="w-full max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 z-10 flex flex-col gap-20 pb-24 mt-16 relative">
 
         {/* ── Hero ── */}
         <section className="flex flex-col gap-6 animate-in fade-in slide-in-from-top-4 duration-700">
@@ -281,12 +281,12 @@ export default function McdWalletPage() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="w-full max-w-6xl mx-auto px-8 lg:px-12 border-t border-[var(--border-subtle)] pt-6 flex justify-between items-end z-10 shrink-0 select-none pb-8 relative">
+      <footer className="w-full max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 border-t border-[var(--border-subtle)] pt-6 flex flex-col sm:flex-row justify-between items-center sm:items-end gap-6 z-10 shrink-0 select-none pb-6 text-center sm:text-left">
         <div className="space-y-2.5">
           <div className="text-[9px] font-black uppercase tracking-wider text-[var(--silver-600)] font-mono">
             &copy; {new Date().getFullYear()} SukaMCD. All rights reserved.
           </div>
-          <div className="flex gap-5">
+          <div className="flex gap-5 justify-center sm:justify-start">
             <a href="https://github.com/SukaMCD" className="text-[9px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">Github</a>
             <a href="https://www.instagram.com/sukamcd.dev/" className="text-[9px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">Instagram</a>
             <a href="https://www.linkedin.com/in/fabianrizkypratama/" className="text-[9px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-white transition-colors" target="_blank" rel="noopener noreferrer">LinkedIn</a>
@@ -295,7 +295,7 @@ export default function McdWalletPage() {
         
         <Link 
           href="/" 
-          className="text-[9.5px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-[var(--silver-100)] transition-colors border-b border-[var(--border-subtle)] pb-0.5"
+          className="text-[9.5px] font-black uppercase tracking-widest font-mono text-[var(--silver-500)] hover:text-[var(--silver-100)] transition-colors border-b border-[var(--border-subtle)] pb-0.5 shrink-0"
         >
           ← Back home
         </Link>
