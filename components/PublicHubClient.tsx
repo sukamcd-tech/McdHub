@@ -187,22 +187,7 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
       <header className="w-full max-w-7xl mx-auto flex justify-between items-center relative z-50 shrink-0">
         <div className="flex items-center gap-2.5 relative z-50">
           <div className="w-6 h-6 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] flex items-center justify-center shadow-lg overflow-hidden shrink-0 select-none">
-            <svg className="w-4 h-4" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="256" cy="256" r="246" fill="black" />
-              <text
-                x="256"
-                y="256"
-                fontFamily="system-ui, -apple-system, 'Outfit', 'Inter', sans-serif"
-                fontSize="150"
-                fontWeight="900"
-                letterSpacing="-0.05em"
-                fill="white"
-                textAnchor="middle"
-                dominantBaseline="central"
-              >
-                MCD
-              </text>
-            </svg>
+            <img src="/logo.svg" alt="MCD" className="w-4 h-4 object-contain" />
           </div>
           <span className="text-sm font-black uppercase tracking-[0.25em] font-mono text-[var(--silver-200)]">
             SUKAMCD
