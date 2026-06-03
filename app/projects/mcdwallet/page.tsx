@@ -161,15 +161,13 @@ export default function McdWalletPage() {
           </div>
 
           <div className="flex flex-wrap gap-3 pt-2">
-            <a
-              href="https://github.com/SukaMCD/McdWallet/releases"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/projects/mcdwallet/download"
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--silver-200)] text-[#0f0f13] text-xs font-black uppercase tracking-widest hover:bg-[var(--silver-100)] transition-all hover:shadow-[0_0_20px_rgba(212,212,216,0.15)] active:scale-[0.99] cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
               Download APK
-            </a>
+            </Link>
             <a
               href="https://github.com/SukaMCD/McdWallet"
               target="_blank"

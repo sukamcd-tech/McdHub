@@ -17,6 +17,7 @@ import {
   ChevronRight,
   ShoppingBag,
   Ticket,
+  Smartphone,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -30,6 +31,7 @@ const navigationGroups = [
       { name: "Orders", href: "/admin/orders", icon: ShoppingBag },
       { name: "Projects", href: "/admin/projects", icon: Rocket },
       { name: "Promos", href: "/admin/promos", icon: Ticket },
+      { name: "Apps", href: "/admin/apps", icon: Smartphone },
     ],
   },
   {
