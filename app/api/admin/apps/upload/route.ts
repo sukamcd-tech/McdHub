@@ -19,56 +19,43 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 2. Parse FormData
-    const formData = await request.formData();
-    const appName = formData.get("app_name") as string;
-    const version = formData.get("version") as string;
-    const apkFile = formData.get("apk_file") as File | null;
-
-    if (!appName || !version || !apkFile) {
+    // 2. Parse JSON body
+    const { app_name, version } = await request.json();
+    if (!app_name || !version) {
       return NextResponse.json(
-        { error: "Missing required parameters (app_name, version, apk_file)" },
+        { error: "Missing required parameters (app_name, version)" },
         { status: 400 }
       );
     }
 
-    if (apkFile.size === 0) {
-      return NextResponse.json({ error: "Empty file uploaded" }, { status: 400 });
-    }
-
-    // 3. Prepare upload
+    // 3. Prepare path
     const mobile = getMobileClient();
-    const slug = appName.toLowerCase().replace(/\s+/g, "-");
+    const slug = app_name.toLowerCase().replace(/\s+/g, "-");
     const fileName = `${slug}/v${version}/${slug}-v${version}.apk`;
-    const apkSizeBytes = apkFile.size;
 
-    const arrayBuffer = await apkFile.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // 4. Upload to Supabase Storage
-    const { error: uploadError } = await mobile.storage
+    // 4. Generate signed upload URL from Supabase Storage
+    const { data, error } = await mobile.storage
       .from("releases")
-      .upload(fileName, buffer, {
-        contentType: "application/vnd.android.package-archive",
-        upsert: true,
-      });
+      .createSignedUploadUrl(fileName);
 
-    if (uploadError) {
+    if (error || !data) {
       return NextResponse.json(
-        { error: `Upload failed: ${uploadError.message}` },
+        { error: `Gagal membuat upload URL: ${error?.message || "Data kosong"}` },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      apkPath: fileName,
-      apkSizeBytes,
+      signedUrl: data.signedUrl,
+      token: data.token,
+      path: data.path,
+      fileName,
     });
   } catch (err: any) {
     console.error("Upload route error:", err);
     return NextResponse.json(
-      { error: err.message || "An unexpected error occurred during upload" },
+      { error: err.message || "An unexpected error occurred" },
       { status: 500 }
     );
   }

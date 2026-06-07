@@ -142,18 +142,43 @@ export default function AppsClient({ initialReleases }: AppsClientProps) {
           return;
         }
 
-        setUploadStatus("Mengupload APK...");
+        setUploadStatus("Menyiapkan upload...");
+        
+        // 1. Dapatkan Signed URL
+        const signedUrlRes = await fetch("/api/admin/apps/upload", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            app_name: appName,
+            version: version,
+          }),
+        });
+
+        if (!signedUrlRes.ok) {
+          const errData = await signedUrlRes.json().catch(() => ({}));
+          alert(`Error: ${errData.error || "Gagal mendapatkan upload URL."}`);
+          setIsSubmitting(false);
+          return;
+        }
+
+        const signedUrlData = await signedUrlRes.json();
+        if (!signedUrlData.success || !signedUrlData.signedUrl) {
+          alert(`Error: ${signedUrlData.error || "Gagal mendapatkan upload URL."}`);
+          setIsSubmitting(false);
+          return;
+        }
+
+        setUploadStatus("Mengupload ke Supabase...");
         setUploadProgress(0);
 
-        // Upload using XMLHttpRequest to get progress events
+        // 2. Upload langsung ke Supabase Storage via PUT
         const uploadResult = await new Promise<{ success: boolean; apkPath?: string; apkSizeBytes?: number; error?: string }>((resolve) => {
           const xhr = new XMLHttpRequest();
-          const uploadFormData = new FormData();
-          uploadFormData.append("apk_file", apkFile);
-          uploadFormData.append("app_name", appName);
-          uploadFormData.append("version", version);
-
-          xhr.open("POST", "/api/admin/apps/upload", true);
+          xhr.open("PUT", signedUrlData.signedUrl, true);
+          
+          xhr.setRequestHeader("Content-Type", apkFile.type || "application/vnd.android.package-archive");
 
           xhr.upload.onprogress = (event) => {
             if (event.lengthComputable) {
@@ -164,27 +189,24 @@ export default function AppsClient({ initialReleases }: AppsClientProps) {
 
           xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) {
-              try {
-                const response = JSON.parse(xhr.responseText);
-                resolve(response);
-              } catch (e) {
-                resolve({ success: false, error: "Gagal memproses respon server." });
-              }
+              resolve({
+                success: true,
+                apkPath: signedUrlData.fileName,
+                apkSizeBytes: apkFile.size,
+              });
             } else {
-              try {
-                const response = JSON.parse(xhr.responseText);
-                resolve({ success: false, error: response.error || "Gagal mengupload file ke server." });
-              } catch (e) {
-                resolve({ success: false, error: `Upload gagal dengan status ${xhr.status}` });
-              }
+              resolve({
+                success: false,
+                error: `Upload gagal dengan status ${xhr.status} (${xhr.statusText})`,
+              });
             }
           };
 
           xhr.onerror = () => {
-            resolve({ success: false, error: "Kesalahan jaringan saat mengupload." });
+            resolve({ success: false, error: "Kesalahan jaringan saat mengupload ke storage." });
           };
 
-          xhr.send(uploadFormData);
+          xhr.send(apkFile);
         });
 
         if (!uploadResult.success) {
