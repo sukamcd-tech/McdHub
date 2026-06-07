@@ -51,11 +51,13 @@ export async function createAppRelease(formData: FormData) {
   const apkFile = formData.get("apk_file") as File | null;
   const forceUpdate = formData.get("force_update") === "true";
 
-  let apkPath: string | null = null;
-  let apkSizeBytes: number | null = null;
+  let apkPath: string | null = formData.get("apk_path") as string | null;
+  let apkSizeBytes: number | null = formData.get("apk_size_bytes")
+    ? Number(formData.get("apk_size_bytes"))
+    : null;
 
-  // Upload APK jika ada file
-  if (apkFile && apkFile.size > 0) {
+  // Upload APK jika ada file dan belum di-upload sebelumnya
+  if (!apkPath && apkFile && apkFile.size > 0) {
     const slug = appName.toLowerCase().replace(/\s+/g, "-");
     const fileName = `${slug}/v${version}/${slug}-v${version}.apk`;
     apkSizeBytes = apkFile.size;

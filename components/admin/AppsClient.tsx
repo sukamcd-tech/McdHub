@@ -50,6 +50,10 @@ export default function AppsClient({ initialReleases }: AppsClientProps) {
   const [isLatest, setIsLatest] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(false);
 
+  // Upload Progress State
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<string>("");
+
   const router = useRouter();
 
   useEffect(() => {
@@ -62,6 +66,9 @@ export default function AppsClient({ initialReleases }: AppsClientProps) {
   }
 
   const handleOpenModal = (release: ReleaseItem | null = null) => {
+    setUploadProgress(null);
+    setUploadStatus("");
+
     if (release) {
       setEditingRelease(release);
       setAppName(release.app_name);
@@ -135,14 +142,75 @@ export default function AppsClient({ initialReleases }: AppsClientProps) {
           return;
         }
 
+        setUploadStatus("Mengupload APK...");
+        setUploadProgress(0);
+
+        // Upload using XMLHttpRequest to get progress events
+        const uploadResult = await new Promise<{ success: boolean; apkPath?: string; apkSizeBytes?: number; error?: string }>((resolve) => {
+          const xhr = new XMLHttpRequest();
+          const uploadFormData = new FormData();
+          uploadFormData.append("apk_file", apkFile);
+          uploadFormData.append("app_name", appName);
+          uploadFormData.append("version", version);
+
+          xhr.open("POST", "/api/admin/apps/upload", true);
+
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              const percent = Math.round((event.loaded / event.total) * 100);
+              setUploadProgress(percent);
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const response = JSON.parse(xhr.responseText);
+                resolve(response);
+              } catch (e) {
+                resolve({ success: false, error: "Gagal memproses respon server." });
+              }
+            } else {
+              try {
+                const response = JSON.parse(xhr.responseText);
+                resolve({ success: false, error: response.error || "Gagal mengupload file ke server." });
+              } catch (e) {
+                resolve({ success: false, error: `Upload gagal dengan status ${xhr.status}` });
+              }
+            }
+          };
+
+          xhr.onerror = () => {
+            resolve({ success: false, error: "Kesalahan jaringan saat mengupload." });
+          };
+
+          xhr.send(uploadFormData);
+        });
+
+        if (!uploadResult.success) {
+          alert(`Error: ${uploadResult.error}`);
+          setUploadProgress(null);
+          setUploadStatus("");
+          setIsSubmitting(false);
+          return;
+        }
+
+        setUploadStatus("Menyimpan rilis...");
+        setUploadProgress(null);
+
         const formData = new FormData();
         formData.append("app_name", appName);
         formData.append("version", version);
         formData.append("release_date", releaseDate);
         formData.append("size_label", sizeLabel);
         formData.append("changelog", changelogRaw);
-        formData.append("apk_file", apkFile);
         formData.append("force_update", String(forceUpdate));
+        if (uploadResult.apkPath) {
+          formData.append("apk_path", uploadResult.apkPath);
+        }
+        if (uploadResult.apkSizeBytes) {
+          formData.append("apk_size_bytes", String(uploadResult.apkSizeBytes));
+        }
 
         const result = await createAppRelease(formData);
         if (result.success) {
@@ -157,6 +225,8 @@ export default function AppsClient({ initialReleases }: AppsClientProps) {
       alert(`System Error: ${err.message}`);
     } finally {
       setIsSubmitting(false);
+      setUploadProgress(null);
+      setUploadStatus("");
     }
   };
 
@@ -614,6 +684,33 @@ export default function AppsClient({ initialReleases }: AppsClientProps) {
                     </div>
                   )}
                 </div>
+
+                {isSubmitting && (uploadProgress !== null || uploadStatus) && (
+                  <div className="space-y-2 mt-4 p-4 rounded-xl border" style={{ borderColor: "var(--border-soft)", background: "rgba(255,255,255,0.02)" }}>
+                    <div className="flex justify-between items-center text-[10px] font-mono" style={{ color: "var(--silver-400)" }}>
+                      <span className="flex items-center gap-2" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: "var(--silver-400)" }} />
+                        {uploadStatus}
+                      </span>
+                      {uploadProgress !== null && (
+                        <span className="font-bold" style={{ color: "var(--silver-200)" }}>{uploadProgress}%</span>
+                      )}
+                    </div>
+                    {uploadProgress !== null && (
+                      <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.4)", border: "1px solid var(--border-subtle)", marginTop: "8px" }}>
+                        <div
+                          className="h-full transition-all duration-300 rounded-full"
+                          style={{
+                            width: `${uploadProgress}%`,
+                            background: "linear-gradient(90deg, #10b981, #06b6d4)",
+                            boxShadow: "0 0 12px rgba(16,185,129,0.4)",
+                            height: "100%"
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <button
                   disabled={isSubmitting}
