@@ -1123,6 +1123,19 @@ function OrderFallback() {
 }
 
 export default function OrderPage() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace("/");
+  }, [router]);
+
+  return (
+    <div className="min-h-screen flex flex-col justify-center items-center bg-[var(--bg-root)] text-[var(--silver-100)]">
+      <Loader2 className="w-6 h-6 animate-spin text-[var(--silver-400)]" />
+    </div>
+  );
+}
+
+function OriginalOrderPage() {
   return (
     <div className="min-h-screen flex flex-col justify-between p-8 lg:p-12 relative bg-[var(--bg-root)] text-[var(--silver-100)] selection:bg-white selection:text-black">
       

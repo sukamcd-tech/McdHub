@@ -198,12 +198,12 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
         
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-2.5 z-10">
-          <a 
+          {/* <a 
             href="/pricing" 
             className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[11px] font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-2 cursor-pointer"
           >
             Pricing
-          </a>
+          </a> */}
           <Link 
             href="/projects" 
             className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] hover:border-[var(--border-silver)] text-[11px] font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-[var(--silver-100)] transition-all duration-200 flex items-center gap-2 cursor-pointer"
@@ -254,13 +254,13 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
           <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[var(--silver-400)] mb-2 select-none">
             — navigation
           </span>
-          <a 
+          {/* <a 
             href="/pricing"
             onClick={() => setMobileMenuOpen(false)}
             className="text-lg font-mono tracking-[0.15em] text-[var(--silver-300)] hover:text-white transition-colors"
           >
             Pricing
-          </a>
+          </a> */}
           <Link 
             href="/projects"
             onClick={() => setMobileMenuOpen(false)}
@@ -429,15 +429,16 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
       </main>
 
       {/* ── Scroll Down Indicator ── */}
-      <div 
+      {/* <div 
         onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}
         className="w-full flex flex-col justify-center items-center py-10 text-[var(--silver-500)] hover:text-white transition-colors cursor-pointer shrink-0 z-10"
       >
         <span className="text-[8.5px] font-black uppercase tracking-[0.2em] font-mono mb-2">View Pricing</span>
         <ChevronDown className="w-4 h-4 animate-bounce" />
-      </div>
+      </div> */}
 
       {/* ── Pricing Section ── */}
+      {false && (
       <section id="pricing" className="w-full max-w-7xl mx-auto z-10 py-16 border-t border-[var(--border-subtle)] space-y-12 scroll-mt-6">
         <div className="text-center space-y-3 shrink-0">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-soft)] shadow-md select-none">
@@ -587,6 +588,7 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
           </div>
         </div>
       </section>
+      )}
 
       {/* ── Footer ── */}
       <footer className="w-full max-w-7xl mx-auto border-t border-[var(--border-subtle)] pt-6 flex flex-col sm:flex-row justify-between items-center sm:items-end gap-6 z-10 shrink-0 select-none text-center sm:text-left">

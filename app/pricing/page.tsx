@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import PricingClient from "./PricingClient";
 
 export const metadata: Metadata = {
@@ -18,5 +19,6 @@ export const metadata: Metadata = {
 };
 
 export default function PricingPage() {
-  return <PricingClient />;
+  redirect("/");
+  // return <PricingClient />;
 }
