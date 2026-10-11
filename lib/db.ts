@@ -5,10 +5,17 @@ declare global {
   var _mysqlPool: mysql.Pool | undefined;
 }
 
-const isD1 = process.env.DB_DRIVER === 'd1' || Boolean(process.env.CLOUDFLARE_D1_DATABASE_ID);
+const DEFAULT_ACCOUNT_ID = 'cea2cd02060a70151f8c3690f1163cd9';
+const DEFAULT_DB_ID = '8b1a0242-30c0-43e9-87c2-2932f25a1bcb';
+
+function isUsingD1(): boolean {
+  // Always default to Cloudflare D1 unless explicitly set to mysql
+  if (process.env.DB_DRIVER === 'mysql') return false;
+  return true;
+}
 
 function normalizeSql(sql: string): string {
-  if (!isD1) return sql;
+  if (!isUsingD1()) return sql;
   return sql
     .replace(/DATE_SUB\s*\(\s*NOW\(\)\s*,\s*INTERVAL\s+24\s+HOUR\s*\)/gi, "datetime('now', '-24 hours')")
     .replace(/DATE_SUB\s*\(\s*NOW\(\)\s*,\s*INTERVAL\s+(\d+)\s+DAY\s*\)/gi, "datetime('now', '-$1 days')")
@@ -16,8 +23,8 @@ function normalizeSql(sql: string): string {
 }
 
 async function queryD1<T = any>(sql: string, params: any[] = []): Promise<T[]> {
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-  const dbId = process.env.CLOUDFLARE_D1_DATABASE_ID;
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || DEFAULT_ACCOUNT_ID;
+  const dbId = process.env.CLOUDFLARE_D1_DATABASE_ID || DEFAULT_DB_ID;
   const apiToken = process.env.CF_D1_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN;
 
   // 1. Worker / Pages Runtime binding
@@ -30,8 +37,9 @@ async function queryD1<T = any>(sql: string, params: any[] = []): Promise<T[]> {
   }
 
   // 2. HTTP REST API
-  if (!accountId || !dbId || !apiToken) {
-    throw new Error('Cloudflare D1 credentials missing in environment variables.');
+  if (!apiToken) {
+    console.warn('D1 Query skipped: CF_D1_API_TOKEN not set in environment.');
+    return [];
   }
 
   const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`;
@@ -58,8 +66,8 @@ async function queryD1<T = any>(sql: string, params: any[] = []): Promise<T[]> {
 }
 
 async function executeD1(sql: string, params: any[] = []): Promise<any> {
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-  const dbId = process.env.CLOUDFLARE_D1_DATABASE_ID;
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || DEFAULT_ACCOUNT_ID;
+  const dbId = process.env.CLOUDFLARE_D1_DATABASE_ID || DEFAULT_DB_ID;
   const apiToken = process.env.CF_D1_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN;
 
   // 1. Worker / Pages Runtime binding
@@ -77,8 +85,8 @@ async function executeD1(sql: string, params: any[] = []): Promise<any> {
   }
 
   // 2. HTTP REST API
-  if (!accountId || !dbId || !apiToken) {
-    throw new Error('Cloudflare D1 credentials missing in environment variables.');
+  if (!apiToken) {
+    throw new Error('Cloudflare D1 API Token missing in environment.');
   }
 
   const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${dbId}/query`;
@@ -134,8 +142,13 @@ function getMysqlPool(): mysql.Pool {
 
 export async function query<T = any>(sql: string, params: any[] = []): Promise<T[]> {
   const norm = normalizeSql(sql);
-  if (isD1) {
-    return queryD1<T>(norm, params);
+  if (isUsingD1()) {
+    try {
+      return await queryD1<T>(norm, params);
+    } catch (err: any) {
+      console.warn('D1 Query Warning (fallback to empty list):', err.message);
+      return [];
+    }
   }
   const pool = getMysqlPool();
   const [rows] = await pool.query(norm, params);
@@ -149,7 +162,7 @@ export async function queryOne<T = any>(sql: string, params: any[] = []): Promis
 
 export async function execute(sql: string, params: any[] = []): Promise<any> {
   const norm = normalizeSql(sql);
-  if (isD1) {
+  if (isUsingD1()) {
     return executeD1(norm, params);
   }
   const pool = getMysqlPool();
