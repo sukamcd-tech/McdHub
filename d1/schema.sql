@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS profiles (
 -- 3. MCDCRYPT FILES (File Enkripsi)
 CREATE TABLE IF NOT EXISTS mcdcrypt_files (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT,
   parent_id INTEGER,
   original_name TEXT NOT NULL,
   is_folder INTEGER NOT NULL DEFAULT 0,
@@ -39,6 +40,7 @@ CREATE TABLE IF NOT EXISTS mcdcrypt_files (
   size INTEGER NOT NULL DEFAULT 0,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
   FOREIGN KEY (parent_id) REFERENCES mcdcrypt_files(id) ON DELETE CASCADE
 );
 
@@ -178,3 +180,13 @@ CREATE TABLE IF NOT EXISTS app_releases (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 13. MCDWALLET DOWNLOAD STATS
+CREATE TABLE IF NOT EXISTS mcdwallet_download_stats (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  downloaded_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  app_name TEXT DEFAULT 'McdWallet',
+  ip_address TEXT,
+  user_agent TEXT
+);
+
