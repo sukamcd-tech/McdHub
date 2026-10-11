@@ -22,21 +22,43 @@ function normalizeSql(sql: string): string {
     .replace(/NOW\(\)/gi, "CURRENT_TIMESTAMP");
 }
 
-async function queryD1<T = any>(sql: string, params: any[] = []): Promise<T[]> {
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || DEFAULT_ACCOUNT_ID;
-  const dbId = process.env.CLOUDFLARE_D1_DATABASE_ID || DEFAULT_DB_ID;
-  const apiToken = process.env.CF_D1_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN;
-
+async function getD1Binding(): Promise<any> {
   // 1. Worker / Pages Runtime binding
   const globalDb = (globalThis as any).DB || (process.env as any).DB;
   if (globalDb && typeof globalDb.prepare === 'function') {
-    const stmt = globalDb.prepare(sql);
+    return globalDb;
+  }
+
+  // 2. OpenNext Cloudflare Context
+  try {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare');
+    const cf = await getCloudflareContext({ async: true });
+    const cfEnv = cf?.env as any;
+    if (cfEnv?.DB && typeof cfEnv.DB.prepare === 'function') {
+      return cfEnv.DB;
+    }
+  } catch {
+    // Ignore when running outside Cloudflare worker runtime
+  }
+
+  return null;
+}
+
+async function queryD1<T = any>(sql: string, params: any[] = []): Promise<T[]> {
+  // 1. Try native D1 binding
+  const binding = await getD1Binding();
+  if (binding) {
+    const stmt = binding.prepare(sql);
     const bound = params.length > 0 ? stmt.bind(...params) : stmt;
     const res = await bound.all();
     return (res.results || []) as T[];
   }
 
   // 2. HTTP REST API
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || DEFAULT_ACCOUNT_ID;
+  const dbId = process.env.CLOUDFLARE_D1_DATABASE_ID || DEFAULT_DB_ID;
+  const apiToken = process.env.CF_D1_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN;
+
   if (!apiToken) {
     console.warn('D1 Query skipped: CF_D1_API_TOKEN not set in environment.');
     return [];
@@ -66,14 +88,10 @@ async function queryD1<T = any>(sql: string, params: any[] = []): Promise<T[]> {
 }
 
 async function executeD1(sql: string, params: any[] = []): Promise<any> {
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || DEFAULT_ACCOUNT_ID;
-  const dbId = process.env.CLOUDFLARE_D1_DATABASE_ID || DEFAULT_DB_ID;
-  const apiToken = process.env.CF_D1_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN;
-
-  // 1. Worker / Pages Runtime binding
-  const globalDb = (globalThis as any).DB || (process.env as any).DB;
-  if (globalDb && typeof globalDb.prepare === 'function') {
-    const stmt = globalDb.prepare(sql);
+  // 1. Try native D1 binding
+  const binding = await getD1Binding();
+  if (binding) {
+    const stmt = binding.prepare(sql);
     const bound = params.length > 0 ? stmt.bind(...params) : stmt;
     const res = await bound.run();
     return {
@@ -85,6 +103,10 @@ async function executeD1(sql: string, params: any[] = []): Promise<any> {
   }
 
   // 2. HTTP REST API
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || DEFAULT_ACCOUNT_ID;
+  const dbId = process.env.CLOUDFLARE_D1_DATABASE_ID || DEFAULT_DB_ID;
+  const apiToken = process.env.CF_D1_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN;
+
   if (!apiToken) {
     throw new Error('Cloudflare D1 API Token missing in environment.');
   }
