@@ -10,8 +10,9 @@ export default defineConfig({
     devServer({
       adapter,
       entry: 'src/server/index.ts',
+      // Only let Hono handle /api routes in Vite dev mode, let Vite handle all SPA routes & assets
       exclude: [
-        /^\/(src|node_modules|@vite|@react-refresh|index\.html|favicon\.ico|assets|\.well-known).*/,
+        /^(?!\/api).*/,
       ],
     }),
   ],

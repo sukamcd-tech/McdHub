@@ -1,22 +1,46 @@
+# Dependencies
+node_modules/
+
+# Production build outputs
+dist/
+dist-ssr/
+
+# Cloudflare Workers, Wrangler & Miniflare
+.wrangler/
+.mf/
+
+# Environment Variables & Secrets
+.dev.vars
+.dev.vars.*
+.env
+.env.*
+.env.local
+!.env.example
+
+# Local SQLite & Databases
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+data/
+
+# TypeScript Build Info
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
+# Editor & OS files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj

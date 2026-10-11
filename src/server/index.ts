@@ -63,12 +63,14 @@ api.route('/ai', aiRoute);
 
 app.route('/api', api);
 
-// Production Static Assets Handler (for Cloudflare Workers runtime)
-app.get('*', async (c) => {
-  if (c.env?.ASSETS) {
-    return await c.env.ASSETS.fetch(c.req.raw);
-  }
-  return c.text('Not Found', 404);
-});
+// In production Cloudflare Workers runtime, fallback unmatched routes to static assets
+if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
+  app.all('*', async (c) => {
+    if (c.env?.ASSETS) {
+      return await c.env.ASSETS.fetch(c.req.raw);
+    }
+    return c.text('Not Found', 404);
+  });
+}
 
 export default app;
