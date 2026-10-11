@@ -18,14 +18,6 @@
 			"database_id": "8b1a0242-30c0-43e9-87c2-2932f25a1bcb"
 		}
 	],
-	"services": [
-		{
-			// Self-reference service binding, the service name must match the worker name
-			// see https://opennext.js.org/cloudflare/caching
-			"binding": "WORKER_SELF_REFERENCE",
-			"service": "mcdhub"
-		}
-	],
 	"images": {
 		// Enable image optimization
 		// see https://opennext.js.org/cloudflare/howtos/image

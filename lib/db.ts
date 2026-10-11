@@ -18,7 +18,7 @@ function normalizeSql(sql: string): string {
 async function queryD1<T = any>(sql: string, params: any[] = []): Promise<T[]> {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const dbId = process.env.CLOUDFLARE_D1_DATABASE_ID;
-  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+  const apiToken = process.env.CF_D1_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN;
 
   // 1. Worker / Pages Runtime binding
   const globalDb = (globalThis as any).DB || (process.env as any).DB;
@@ -60,7 +60,7 @@ async function queryD1<T = any>(sql: string, params: any[] = []): Promise<T[]> {
 async function executeD1(sql: string, params: any[] = []): Promise<any> {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const dbId = process.env.CLOUDFLARE_D1_DATABASE_ID;
-  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+  const apiToken = process.env.CF_D1_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN;
 
   // 1. Worker / Pages Runtime binding
   const globalDb = (globalThis as any).DB || (process.env as any).DB;
