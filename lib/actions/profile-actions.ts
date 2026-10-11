@@ -1,12 +1,11 @@
 "use server";
 
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { execute } from "@/lib/db";
+import { getCurrentUser, hashPassword } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 export async function updateProfile(formData: FormData) {
-  const supabase = await createServerSupabaseClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
   const name = formData.get("name") as string;
@@ -14,30 +13,27 @@ export async function updateProfile(formData: FormData) {
   const phone_number = formData.get("phone_number") as string;
   const bio = formData.get("bio") as string;
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      name,
-      username,
-      phone_number,
-      bio,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", user.id);
+  try {
+    await execute(
+      `UPDATE profiles
+       SET name = ?, username = ?, phone_number = ?, bio = ?, updated_at = NOW()
+       WHERE id = ?`,
+      [name, username, phone_number, bio, user.id]
+    );
 
-  if (error) {
+    revalidatePath("/admin/profile");
+    revalidatePath("/profile");
+    return { success: true };
+  } catch (error: any) {
     console.error("Error updating profile:", error);
     return { success: false, error: error.message };
   }
-
-  revalidatePath("/admin/profile");
-  revalidatePath("/profile");
-  return { success: true };
 }
 
 export async function updatePassword(formData: FormData) {
-  const supabase = await createServerSupabaseClient();
-  
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Unauthorized");
+
   const password = formData.get("password") as string;
   const passwordConfirmation = formData.get("password_confirmation") as string;
 
@@ -45,36 +41,37 @@ export async function updatePassword(formData: FormData) {
     return { success: false, error: "Passwords do not match" };
   }
 
-  const { error } = await supabase.auth.updateUser({
-    password: password,
-  });
-
-  if (error) {
-    return { success: false, error: error.message };
+  if (password.length < 6) {
+    return { success: false, error: "Password must be at least 6 characters" };
   }
 
-  return { success: true };
+  try {
+    const hashed = hashPassword(password);
+    await execute(
+      `UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?`,
+      [hashed, user.id]
+    );
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
 }
 
 export async function updateAvatarUrl(url: string) {
-  const supabase = await createServerSupabaseClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      profile_picture: url,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", user.id);
+  try {
+    await execute(
+      `UPDATE profiles SET profile_picture = ?, updated_at = NOW() WHERE id = ?`,
+      [url, user.id]
+    );
 
-  if (error) {
+    revalidatePath("/admin/profile");
+    revalidatePath("/profile");
+    return { success: true };
+  } catch (error: any) {
     return { success: false, error: error.message };
   }
-
-  revalidatePath("/admin/profile");
-  revalidatePath("/profile");
-  return { success: true };
 }

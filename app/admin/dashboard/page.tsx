@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { getCurrentUser } from "@/lib/auth";
 import {
   Rocket,
   ShieldCheck,
@@ -18,10 +18,7 @@ import { getProjects } from "@/lib/actions/project-actions";
 import { getDashboardStats } from "@/lib/actions/dashboard-actions";
 
 export default async function DashboardPage() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/gateway");

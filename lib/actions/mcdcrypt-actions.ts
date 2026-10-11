@@ -1,62 +1,70 @@
 "use server";
 
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import crypto from "crypto";
+import path from "path";
+import fs from "fs/promises";
+import { query, queryOne, execute } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { encryptBuffer } from "@/lib/crypt/aes";
 import { v4 as uuidv4 } from "uuid";
 
-export async function getFiles(parentId: string | null = null) {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
+const CRYPT_DIR = path.join(process.cwd(), "data", "mcdcrypt");
 
+async function ensureCryptDir(subdir = "") {
+  const dir = path.join(CRYPT_DIR, subdir);
+  await fs.mkdir(dir, { recursive: true });
+  return dir;
+}
+
+export async function getFiles(parentId: string | number | null = null) {
+  const user = await getCurrentUser();
   if (!user) return [];
 
-  let query = supabase
-    .from("mcdcrypt_files")
-    .select("*")
-    .eq("user_id", user.id);
+  try {
+    let sql: string;
+    let params: any[];
 
-  if (parentId) {
-    query = query.eq("parent_id", parentId);
-  } else {
-    query = query.is("parent_id", null);
-  }
+    if (parentId) {
+      sql = "SELECT * FROM mcdcrypt_files WHERE (user_id = ? OR user_id IS NULL) AND parent_id = ? ORDER BY is_folder DESC, original_name ASC";
+      params = [user.id, parentId];
+    } else {
+      sql = "SELECT * FROM mcdcrypt_files WHERE (user_id = ? OR user_id IS NULL) AND parent_id IS NULL ORDER BY is_folder DESC, original_name ASC";
+      params = [user.id];
+    }
 
-  const { data, error } = await query.order("is_folder", { ascending: false }).order("original_name");
-
-  if (error) {
+    const data = await query(sql, params);
+    return data.map((item: any) => ({
+      ...item,
+      is_folder: Boolean(item.is_folder),
+      storage_path: item.encrypted_path,
+    }));
+  } catch (error) {
     console.error("Error fetching crypt files:", error);
     return [];
   }
-
-  return data;
 }
 
-export async function createFolder(name: string, parentId: string | null = null) {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
+export async function createFolder(name: string, parentId: string | number | null = null) {
+  const user = await getCurrentUser();
   if (!user) return { success: false, error: "Unauthorized" };
 
-  const { error } = await supabase
-    .from("mcdcrypt_files")
-    .insert([{
-      user_id: user.id,
-      original_name: name,
-      is_folder: true,
-      parent_id: parentId
-    }]);
+  try {
+    await execute(
+      `INSERT INTO mcdcrypt_files (user_id, original_name, is_folder, parent_id)
+       VALUES (?, ?, TRUE, ?)`,
+      [user.id, name, parentId || null]
+    );
 
-  if (error) return { success: false, error: error.message };
-
-  revalidatePath("/admin/mcdcrypt");
-  return { success: true };
+    revalidatePath("/admin/mcdcrypt");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
 }
 
 export async function uploadFile(formData: FormData) {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) return { success: false, error: "Unauthorized" };
 
   const file = formData.get("file") as File;
@@ -71,69 +79,44 @@ export async function uploadFile(formData: FormData) {
     // Enkripsi file menggunakan AES-256
     const encryptedBuffer = encryptBuffer(buffer);
     
-    const storagePath = `${user.id}/${uuidv4()}.enc`;
+    const userDir = await ensureCryptDir(user.id);
+    const fileName = `${uuidv4()}.enc`;
+    const fullPath = path.join(userDir, fileName);
+    const storagePath = `${user.id}/${fileName}`;
 
-    // Upload ke bucket 'mcdcrypt'
-    const { error: uploadError } = await supabase.storage
-      .from("mcdcrypt")
-      .upload(storagePath, encryptedBuffer, {
-        contentType: "application/octet-stream",
-        cacheControl: "3600"
-      });
+    await fs.writeFile(fullPath, encryptedBuffer);
 
-    if (uploadError) throw uploadError;
-
-    // Simpan metadata ke DB
-    const { error: dbError } = await supabase
-      .from("mcdcrypt_files")
-      .insert([{
-        user_id: user.id,
-        original_name: file.name,
-        storage_path: storagePath,
-        mime_type: file.type,
-        size: file.size,
-        is_folder: false,
-        parent_id: parentId
-      }]);
-
-    if (dbError) throw dbError;
+    // Simpan metadata ke MariaDB
+    await execute(
+      `INSERT INTO mcdcrypt_files (user_id, original_name, encrypted_path, mime_type, size, is_folder, parent_id)
+       VALUES (?, ?, ?, ?, ?, FALSE, ?)`,
+      [user.id, file.name, storagePath, file.type, file.size, parentId ? Number(parentId) : null]
+    );
 
     revalidatePath("/admin/mcdcrypt");
     return { success: true };
-
   } catch (error: any) {
     console.error("Upload error:", error);
     return { success: false, error: error.message };
   }
 }
 
-export async function deleteItem(id: string) {
-  const supabase = await createServerSupabaseClient();
-  
-  // Ambil metadata untuk cek apakah folder atau file
-  const { data: item } = await supabase
-    .from("mcdcrypt_files")
-    .select("*")
-    .eq("id", id)
-    .single();
+export async function deleteItem(id: string | number) {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: "Unauthorized" };
 
+  const item = await queryOne<any>("SELECT * FROM mcdcrypt_files WHERE id = ?", [id]);
   if (!item) return { success: false, error: "Item not found" };
 
   try {
     if (item.is_folder) {
-      // Rekursif hapus isi folder ditangani oleh CASCADE di database
-      // Tapi file di storage harus dihapus manual
-      await deleteFolderContents(id, supabase);
-    } else if (item.storage_path) {
-      await supabase.storage.from("mcdcrypt").remove([item.storage_path]);
+      await deleteFolderContents(id);
+    } else if (item.encrypted_path) {
+      const fullPath = path.join(CRYPT_DIR, item.encrypted_path);
+      await fs.unlink(fullPath).catch(() => {});
     }
 
-    const { error } = await supabase
-      .from("mcdcrypt_files")
-      .delete()
-      .eq("id", id);
-
-    if (error) throw error;
+    await execute("DELETE FROM mcdcrypt_files WHERE id = ?", [id]);
 
     revalidatePath("/admin/mcdcrypt");
     return { success: true };
@@ -142,127 +125,96 @@ export async function deleteItem(id: string) {
   }
 }
 
-async function deleteFolderContents(folderId: string, supabase: any) {
-  const { data: children } = await supabase
-    .from("mcdcrypt_files")
-    .select("*")
-    .eq("parent_id", folderId);
-
-  if (children) {
-    for (const child of children) {
-      if (child.is_folder) {
-        await deleteFolderContents(child.id, supabase);
-      } else if (child.storage_path) {
-        await supabase.storage.from("mcdcrypt").remove([child.storage_path]);
-      }
+async function deleteFolderContents(folderId: string | number) {
+  const children = await query<any>("SELECT * FROM mcdcrypt_files WHERE parent_id = ?", [folderId]);
+  for (const child of children) {
+    if (child.is_folder) {
+      await deleteFolderContents(child.id);
+    } else if (child.encrypted_path) {
+      const fullPath = path.join(CRYPT_DIR, child.encrypted_path);
+      await fs.unlink(fullPath).catch(() => {});
     }
   }
 }
 
-export async function renameItem(id: string, newName: string) {
-  const supabase = await createServerSupabaseClient();
-  
-  const { error } = await supabase
-    .from("mcdcrypt_files")
-    .update({ original_name: newName, updated_at: new Date().toISOString() })
-    .eq("id", id);
-
-  if (error) return { success: false, error: error.message };
-
-  revalidatePath("/admin/mcdcrypt");
-  return { success: true };
+export async function renameItem(id: string | number, newName: string) {
+  try {
+    await execute(
+      "UPDATE mcdcrypt_files SET original_name = ?, updated_at = NOW() WHERE id = ?",
+      [newName, id]
+    );
+    revalidatePath("/admin/mcdcrypt");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
 }
 
-export async function moveItem(id: string, newParentId: string | null) {
-  const supabase = await createServerSupabaseClient();
-  
-  // Prevent cycles or same parent
+export async function moveItem(id: string | number, newParentId: string | number | null) {
   if (id === newParentId) return { success: false, error: "Cannot move item into itself" };
 
-  const { error } = await supabase
-    .from("mcdcrypt_files")
-    .update({ parent_id: newParentId, updated_at: new Date().toISOString() })
-    .eq("id", id);
-
-  if (error) return { success: false, error: error.message };
-
-  revalidatePath("/admin/mcdcrypt");
-  return { success: true };
+  try {
+    await execute(
+      "UPDATE mcdcrypt_files SET parent_id = ?, updated_at = NOW() WHERE id = ?",
+      [newParentId ? Number(newParentId) : null, id]
+    );
+    revalidatePath("/admin/mcdcrypt");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
 }
 
-export async function getBreadcrumbs(folderId: string | null) {
+export async function getBreadcrumbs(folderId: string | number | null) {
   if (!folderId) return [];
 
-  const supabase = await createServerSupabaseClient();
   const breadcrumbs: { id: string; original_name: string }[] = [];
-  
-  let currentId: string | null = folderId;
+  let currentId: any = folderId;
 
   while (currentId) {
-    const { data, error }: { data: any, error: any } = await supabase
-      .from("mcdcrypt_files")
-      .select("id, original_name, parent_id")
-      .eq("id", currentId)
-      .single();
+    const data = await queryOne<any>(
+      "SELECT id, original_name, parent_id FROM mcdcrypt_files WHERE id = ?",
+      [currentId]
+    );
+    if (!data) break;
 
-    if (error || !data) break;
-
-    breadcrumbs.unshift({ id: data.id, original_name: data.original_name });
+    breadcrumbs.unshift({ id: String(data.id), original_name: data.original_name });
     currentId = data.parent_id;
   }
 
   return breadcrumbs;
 }
 
-export async function duplicateItem(id: string, targetParentId: string | null) {
-  const supabase = await createServerSupabaseClient();
-  
-  // 1. Get source item
-  const { data: source, error: fetchError }: { data: any, error: any } = await supabase
-    .from("mcdcrypt_files")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (fetchError || !source) return { success: false, error: "Item not found" };
+export async function duplicateItem(id: string | number, targetParentId: string | number | null) {
+  const source = await queryOne<any>("SELECT * FROM mcdcrypt_files WHERE id = ?", [id]);
+  if (!source) return { success: false, error: "Item not found" };
   if (source.is_folder) return { success: false, error: "Folder duplication not yet supported" };
 
   try {
-    const newId = crypto.randomUUID();
     let newStoragePath = null;
 
-    // 2. Duplicate Storage if it's a file
-    if (source.storage_path) {
-      const pathParts = source.storage_path.split("/");
-      const fileName = pathParts.pop();
-      const userDir = pathParts.join("/");
-      const newFileName = `${crypto.randomUUID()}.enc`;
-      newStoragePath = `${userDir}/${newFileName}`;
+    if (source.encrypted_path) {
+      const srcPath = path.join(CRYPT_DIR, source.encrypted_path);
+      const userDir = path.dirname(source.encrypted_path);
+      const newFileName = `${uuidv4()}.enc`;
+      newStoragePath = path.join(userDir, newFileName);
+      const destPath = path.join(CRYPT_DIR, newStoragePath);
 
-      const { error: copyError } = await supabase.storage
-        .from("mcdcrypt")
-        .copy(source.storage_path, newStoragePath);
-
-      if (copyError) throw copyError;
+      await fs.copyFile(srcPath, destPath);
     }
 
-    // 3. Insert new DB record
-    const { error: insertError } = await supabase
-      .from("mcdcrypt_files")
-      .insert([{
-        id: newId,
-        user_id: source.user_id,
-        original_name: `${source.original_name} - Copy`,
-        storage_path: newStoragePath,
-        mime_type: source.mime_type,
-        size: source.size,
-        is_folder: false,
-        parent_id: targetParentId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }]);
-
-    if (insertError) throw insertError;
+    await execute(
+      `INSERT INTO mcdcrypt_files (user_id, original_name, encrypted_path, mime_type, size, is_folder, parent_id)
+       VALUES (?, ?, ?, ?, ?, FALSE, ?)`,
+      [
+        source.user_id,
+        `${source.original_name} - Copy`,
+        newStoragePath,
+        source.mime_type,
+        source.size,
+        targetParentId ? Number(targetParentId) : null,
+      ]
+    );
 
     revalidatePath("/admin/mcdcrypt");
     return { success: true };

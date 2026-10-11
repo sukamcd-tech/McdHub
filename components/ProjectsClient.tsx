@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, Search, Plus, Laptop, X, Lock, User } from "lucide-react";
-import { createClient } from "@/lib/supabase";
 
 interface Project {
   id: string;
@@ -19,35 +18,27 @@ export default function ProjectsClient({ initialProjects }: { initialProjects: P
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const supabase = useMemo(() => createClient(), []);
-
   useEffect(() => {
     let isMounted = true;
 
     async function initializeAuth() {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch("/api/auth/session");
+        const data = await res.json();
         if (isMounted) {
-          setIsLoggedIn(!!session);
+          setIsLoggedIn(!!data?.user);
         }
       } catch (error) {
-        console.error('Error loading session:', error);
+        console.error("Error loading session:", error);
       }
     }
 
     initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (isMounted) {
-        setIsLoggedIn(!!session);
-      }
-    });
-
     return () => {
       isMounted = false;
-      subscription?.unsubscribe();
     };
-  }, [supabase]);
+  }, []);
 
   // Dynamically extract unique categories and uppercase them
   const categories = [

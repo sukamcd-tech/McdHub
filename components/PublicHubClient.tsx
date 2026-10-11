@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase";
 import { ArrowUpRight, Plus, Laptop, Check, Sparkles, Globe, RefreshCw, ShieldCheck, AlertCircle, ChevronDown, User, Menu, X } from "lucide-react";
 
 interface Project {
@@ -108,7 +107,6 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -120,31 +118,19 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
       document.body.style.overflow = "";
     };
   }, [mobileMenuOpen]);
-
   useEffect(() => {
     let isMounted = true;
 
     async function initializeAuth() {
       try {
-        // First, try to get the current session
-        const { data: { session } } = await supabase.auth.getSession();
-        
+        const res = await fetch("/api/auth/session");
+        const data = await res.json();
         if (isMounted) {
-          setIsLoggedIn(!!session);
+          setIsLoggedIn(!!data?.user);
           setIsLoading(false);
         }
-
-        // Clean up OAuth query parameters from URL once session is resolved
-        if (typeof window !== "undefined") {
-          const url = new URL(window.location.href);
-          if (url.searchParams.has("code") || url.searchParams.has("state")) {
-            url.searchParams.delete("code");
-            url.searchParams.delete("state");
-            window.history.replaceState({}, document.title, url.pathname + url.search);
-          }
-        }
       } catch (error) {
-        console.error('Error loading session:', error);
+        console.error("Error loading session:", error);
         if (isMounted) {
           setIsLoading(false);
         }
@@ -153,22 +139,16 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
 
     initializeAuth();
 
-    // Subscribe to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (isMounted) {
-        setIsLoggedIn(!!session);
-      }
-    });
-
     return () => {
       isMounted = false;
-      subscription?.unsubscribe();
     };
-  }, [supabase]);
+  }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await fetch("/api/auth/logout", { method: "POST" });
+    setIsLoggedIn(false);
     router.push("/");
+    router.refresh();
   };
 
   return (
@@ -429,16 +409,15 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
       </main>
 
       {/* ── Scroll Down Indicator ── */}
-      {/* <div 
+      <div 
         onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}
         className="w-full flex flex-col justify-center items-center py-10 text-[var(--silver-500)] hover:text-white transition-colors cursor-pointer shrink-0 z-10"
       >
         <span className="text-[8.5px] font-black uppercase tracking-[0.2em] font-mono mb-2">View Pricing</span>
         <ChevronDown className="w-4 h-4 animate-bounce" />
-      </div> */}
+      </div>
 
       {/* ── Pricing Section ── */}
-      {false && (
       <section id="pricing" className="w-full max-w-7xl mx-auto z-10 py-16 border-t border-[var(--border-subtle)] space-y-12 scroll-mt-6">
         <div className="text-center space-y-3 shrink-0">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-soft)] shadow-md select-none">
@@ -588,7 +567,6 @@ export default function PublicHubClient({ initialProjects }: { initialProjects: 
           </div>
         </div>
       </section>
-      )}
 
       {/* ── Footer ── */}
       <footer className="w-full max-w-7xl mx-auto border-t border-[var(--border-subtle)] pt-6 flex flex-col sm:flex-row justify-between items-center sm:items-end gap-6 z-10 shrink-0 select-none text-center sm:text-left">

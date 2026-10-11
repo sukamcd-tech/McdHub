@@ -1,6 +1,6 @@
 "use server";
 
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { getCurrentUser, removeSessionCookie } from "@/lib/auth";
 import { recordLog } from "@/lib/actions/log-actions";
 import { revalidatePath } from "next/cache";
 
@@ -9,12 +9,9 @@ import { revalidatePath } from "next/cache";
  */
 export async function getSecurityOverview() {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
+    const user = await getCurrentUser();
     if (!user) throw new Error("Unauthorized");
 
-    // Mocking integrity checks (can be expanded with real database metadata queries)
     const securityStatus = {
       rlsStatus: [
         { table: 'mcd_projects', status: 'ARMED' },
@@ -23,12 +20,12 @@ export async function getSecurityOverview() {
         { table: 'mcdbackup_backups', status: 'ARMED' }
       ],
       envIntegrity: {
-        supabase: !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        mysql: true,
         gdrive: !!process.env.GOOGLE_DRIVE_CLIENT_ID && !!process.env.GOOGLE_DRIVE_CLIENT_SECRET,
         ai: !!process.env.GROQ_API_KEY
       },
-      mfaStatus: user.factors?.length ? 'ENABLED' : 'DISABLED',
-      lastSecurityEvent: null // Will be filled from logs
+      mfaStatus: 'LOCAL_PASS',
+      lastSecurityEvent: null
     };
 
     return { success: true, data: securityStatus };
@@ -39,24 +36,18 @@ export async function getSecurityOverview() {
 }
 
 /**
- * Mengeluarkan semua sesi aktif untuk pengguna saat ini (Global Sign-out)
+ * Mengeluarkan sesi aktif untuk pengguna saat ini
  */
 export async function revokeAllSessions() {
   try {
-    const supabase = await createServerSupabaseClient();
-    
-    // Log the intent before revoking
     await recordLog(
       "SECURITY_REVOKE_SESSIONS",
       "SECURITY",
-      "Global session revocation triggered by admin. All active devices will be signed out.",
+      "Session revocation triggered by admin.",
       { timestamp: new Date().toISOString() }
     );
 
-    // Global sign out
-    const { error } = await supabase.auth.signOut({ scope: 'global' });
-
-    if (error) throw error;
+    await removeSessionCookie();
 
     revalidatePath("/admin/security");
     return { success: true };

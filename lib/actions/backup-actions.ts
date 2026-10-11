@@ -1,6 +1,7 @@
 "use server";
 
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { query, execute } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 import { generateBackupFilename, uploadToDrive } from "@/lib/gdrive";
 import { recordLog } from "@/lib/actions/log-actions";
 import archiver from "archiver";
@@ -8,17 +9,13 @@ import { PassThrough } from "stream";
 
 export async function getBackupHistory() {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getCurrentUser();
     if (!user) return { success: false, error: "Unauthorized" };
 
-    const { data, error } = await supabase
-      .from("mcdbackup_backups")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(5);
+    const data = await query(
+      "SELECT * FROM mcdbackup_backups ORDER BY created_at DESC LIMIT 5"
+    );
 
-    if (error) throw error;
     return { success: true, history: data };
   } catch (error: any) {
     console.error("Failed to fetch backup history:", error);
@@ -28,24 +25,14 @@ export async function getBackupHistory() {
 
 export async function triggerManualBackup() {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    const user = await getCurrentUser();
     if (!user) return { success: false, error: "Unauthorized" };
 
     // 1. Fetch Data
-    const { data: projects, error: pError } = await supabase
-      .from("mcd_projects")
-      .select("*")
-      .order("display_order", { ascending: true });
+    const projects = await query("SELECT * FROM mcd_projects ORDER BY display_order ASC");
+    const profiles = await query("SELECT * FROM profiles");
 
-    if (pError) throw new Error("Gagal mengambil data proyek: " + pError.message);
-
-    const { data: profiles, error: prError } = await supabase
-      .from("profiles")
-      .select("*");
-
-    // 2. Generate SQL Dump String (Simple Helper)
+    // 2. Generate SQL Dump String
     const generateSQL = (tableName: string, rows: any[]) => {
       if (!rows || rows.length === 0) return `-- No data for ${tableName}\n`;
       
@@ -96,8 +83,6 @@ export async function triggerManualBackup() {
     
     // Add metadata
     archive.append(JSON.stringify(metadata, null, 2), { name: 'metadata.json' });
-    
-    // Create empty mcdcrypt_files folder inside zip
     archive.append('', { name: 'mcdcrypt_files/.gitkeep' });
 
     // Finalize archive
@@ -105,23 +90,15 @@ export async function triggerManualBackup() {
 
     // 5. Upload to Drive
     const uploadResult = await uploadToDrive(filename, passthrough);
-    await finalizePromise; // Ensure archive is finalized
+    await finalizePromise;
 
     // 6. Persist to Database
     const fileSize = (archive.pointer() / 1024).toFixed(2) + " KB";
     
-    const { error: dbError } = await supabase
-      .from("mcdbackup_backups")
-      .insert({
-        filename: filename,
-        size: fileSize,
-        type: "manual"
-      });
-
-    if (dbError) {
-       console.error("Database logging failed:", dbError);
-       // We don't throw here because gdrive upload was successful
-    }
+    await execute(
+      "INSERT INTO mcdbackup_backups (filename, size, type) VALUES (?, ?, 'manual')",
+      [filename, fileSize]
+    );
 
     // 7. Success log
     await recordLog(
@@ -142,7 +119,6 @@ export async function triggerManualBackup() {
   } catch (error: any) {
     console.error("Backup failed:", error);
     
-    // Log Failure
     await recordLog(
       "BACKUP_FAILED",
       "SECURITY",

@@ -1,6 +1,6 @@
 "use server";
 
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { query, queryOne } from "@/lib/db";
 
 export async function getDashboardStats(): Promise<{
   success: boolean;
@@ -9,7 +9,7 @@ export async function getDashboardStats(): Promise<{
     securityAlerts: number;
     systemStatus: string;
     integrityInfo: {
-      supabase: boolean;
+      mysql: boolean;
       gdrive: boolean;
       ai: boolean;
     };
@@ -19,59 +19,57 @@ export async function getDashboardStats(): Promise<{
   };
   error?: string;
 }> {
-  const supabase = await createServerSupabaseClient();
-  
   try {
     // 1. Get Total Backups count
-    const { count: totalBackups } = await supabase
-      .from('mcdbackup_backups')
-      .select('*', { count: 'exact', head: true });
+    const backupRes = await queryOne<{ count: number }>(
+      "SELECT COUNT(*) as count FROM mcdbackup_backups"
+    );
 
     // 2. Get Security Events in last 24h
-    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { count: securityAlerts } = await supabase
-      .from('mcd_system_logs')
-      .select('*', { count: 'exact', head: true })
-      .eq('category', 'SECURITY')
-      .gt('created_at', yesterday);
+    const secRes = await queryOne<{ count: number }>(
+      `SELECT COUNT(*) as count FROM mcd_system_logs
+       WHERE category = 'SECURITY' AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)`
+    );
 
-    // 3. Get open feedback counts (bugs and suggestions)
-    const [
-      { count: bugCount },
-      { count: saranCount },
-      { data: recentFeedbacks }
-    ] = await Promise.all([
-      supabase.from('feedbacks').select('*', { count: 'exact', head: true }).eq('type', 'bug').eq('status', 'open'),
-      supabase.from('feedbacks').select('*', { count: 'exact', head: true }).eq('type', 'saran').eq('status', 'open'),
-      supabase.from('feedbacks').select('*').order('created_at', { ascending: false }).limit(4)
-    ]);
+    // 3. Feedback counts
+    const bugRes = await queryOne<{ count: number }>(
+      "SELECT COUNT(*) as count FROM feedbacks WHERE type = 'bug' AND status = 'open'"
+    );
 
-    // 4. System Integrity Check (ENVs)
+    const saranRes = await queryOne<{ count: number }>(
+      "SELECT COUNT(*) as count FROM feedbacks WHERE type = 'saran' AND status = 'open'"
+    );
+
+    const recentFeedbacks = await query(
+      "SELECT * FROM feedbacks ORDER BY created_at DESC LIMIT 4"
+    );
+
+    // 4. System Integrity Check
     const integrity = {
-      supabase: !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      gdrive: !!process.env.GOOGLE_DRIVE_FOLDER_ID && !!process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-      ai: !!process.env.GROQ_API_KEY
+      mysql: true,
+      gdrive: !!process.env.GOOGLE_DRIVE_FOLDER_ID && !!process.env.GOOGLE_DRIVE_CLIENT_ID,
+      ai: !!process.env.GROQ_API_KEY,
     };
 
-    const isHealthy = Object.values(integrity).every(v => v);
+    const isHealthy = Object.values(integrity).every(Boolean);
 
     return {
       success: true,
       data: {
-        totalBackups: totalBackups || 0,
-        securityAlerts: securityAlerts || 0,
+        totalBackups: backupRes?.count || 0,
+        securityAlerts: secRes?.count || 0,
         systemStatus: isHealthy ? 'Stable' : 'Degraded',
         integrityInfo: integrity,
-        bugCount: bugCount || 0,
-        saranCount: saranCount || 0,
-        recentFeedbacks: recentFeedbacks || []
-      }
+        bugCount: bugRes?.count || 0,
+        saranCount: saranRes?.count || 0,
+        recentFeedbacks: recentFeedbacks || [],
+      },
     };
   } catch (error) {
     console.error("Failed to fetch dashboard stats:", error);
     return {
       success: false,
-      error: "Failed to aggregate system statistics"
+      error: "Failed to aggregate system statistics",
     };
   }
 }

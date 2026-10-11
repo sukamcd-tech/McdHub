@@ -1,6 +1,6 @@
 import Sidebar from "@/components/admin/Sidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 export default async function AdminLayout({
@@ -8,20 +8,13 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/gateway");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("profile_picture, role")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile || profile.role !== "admin") {
+  if (user.role !== "admin") {
     redirect("/");
   }
 
@@ -29,7 +22,7 @@ export default async function AdminLayout({
     <div className="flex h-screen overflow-hidden text-zinc-100" style={{ background: "var(--bg-root)" }}>
       <Sidebar />
       <div className="relative flex flex-1 flex-col overflow-hidden">
-        <AdminHeader user={user} profile={profile} />
+        <AdminHeader user={user as any} profile={{ profile_picture: user.profile_picture || null }} />
         <main className="flex-1 p-8 overflow-y-auto">
           {children}
         </main>

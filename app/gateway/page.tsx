@@ -84,28 +84,30 @@ function GatewayContent() {
       return
     }
 
-    const { error } = await supabase.auth.signInWithPassword({ 
-      email, 
-      password,
-      options: {
-        captchaToken: turnstileToken
-      }
-    })
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
 
-    if (error) {
-      setError(error.message || 'Invalid email or password. Access denied.')
-      setLoading(false)
-      
-      // Reset Turnstile on login failure
-      if ((window as any).turnstile) {
-        (window as any).turnstile.reset('#turnstile-container')
+      if (!res.ok || !data.success) {
+        setError(data.error || 'Invalid email or password. Access denied.');
+        setLoading(false);
+        if ((window as any).turnstile) {
+          (window as any).turnstile.reset('#turnstile-container');
+        }
+        setTurnstileToken(null);
+        return;
       }
-      setTurnstileToken(null)
-      return
+
+      router.push(redirectParam);
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please try again.');
+      setLoading(false);
     }
-
-    router.push(redirectParam)
-    router.refresh()
   }
 
   const handleOAuthSignIn = async (provider: 'google' | 'github') => {

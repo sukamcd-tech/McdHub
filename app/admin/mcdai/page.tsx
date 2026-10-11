@@ -1,6 +1,7 @@
 import { getConversations } from "@/lib/actions/ai-actions";
 import AIChatContainer from "@/components/admin/AIChatContainer";
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { getCurrentUser } from "@/lib/auth";
+import { queryOne } from "@/lib/db";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -9,16 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default async function McdAIPage() {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
+  const user = await getCurrentUser();
   const initialConversations = await getConversations();
   
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user?.id)
-    .single();
+  const profile = user ? await queryOne("SELECT * FROM profiles WHERE id = ? LIMIT 1", [user.id]) : null;
 
   return (
     <div className="h-[calc(100%+4rem)] -m-8 flex overflow-hidden bg-black">

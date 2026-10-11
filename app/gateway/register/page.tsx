@@ -117,31 +117,30 @@ export default function RegisterPage() {
       return
     }
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: name,
-        },
-        captchaToken: turnstileToken
-      }
-    })
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
 
-    if (error) {
-      setError(error.message || 'Failed to create account. Please try again.')
-      setLoading(false)
-      
-      // Reset Turnstile on registration failure
-      if ((window as any).turnstile) {
-        (window as any).turnstile.reset('#turnstile-container')
+      if (!res.ok || !data.success) {
+        setError(data.error || 'Failed to create account. Please try again.');
+        setLoading(false);
+        if ((window as any).turnstile) {
+          (window as any).turnstile.reset('#turnstile-container');
+        }
+        setTurnstileToken(null);
+        return;
       }
-      setTurnstileToken(null)
-      return
+
+      setSuccess(true);
+      setLoading(false);
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.');
+      setLoading(false);
     }
-
-    setSuccess(true)
-    setLoading(false)
   }
 
   return (
