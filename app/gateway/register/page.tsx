@@ -15,8 +15,6 @@ export default function RegisterPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
-  
   const router = useRouter()
   const supabase = createClient()
   const isGoogleOAuthEnabled = process.env.NEXT_PUBLIC_SUPABASE_GOOGLE_OAUTH_ENABLED === 'true'
@@ -41,59 +39,6 @@ export default function RegisterPage() {
     }
   }
 
-  // Load and render Cloudflare Turnstile widget
-  useEffect(() => {
-    const loadedKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-
-    // Define Turnstile render callback globally
-    (window as any).onloadTurnstileCallback = () => {
-      const container = document.getElementById('turnstile-container')
-
-      if ((window as any).turnstile && container && loadedKey) {
-        if (container.hasChildNodes()) {
-          return
-        }
-
-        (window as any).turnstile.render(container, {
-          sitekey: loadedKey,
-          theme: 'dark',
-          callback: (token: string) => {
-            setTurnstileToken(token)
-          },
-          'expired-callback': () => {
-            setTurnstileToken(null)
-          },
-          'error-callback': () => {
-            setTurnstileToken(null)
-            console.warn("Cloudflare Turnstile failed to load or verify.");
-          }
-        })
-      } else if (!loadedKey) {
-        setError('Turnstile site key is not configured.')
-      }
-    }
-
-    const scriptId = 'cloudflare-turnstile-script'
-    let script = document.getElementById(scriptId) as HTMLScriptElement
-    
-    if (!script) {
-      script = document.createElement('script')
-      script.id = scriptId
-      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback&render=explicit'
-      script.async = true
-      script.defer = true
-      document.head.appendChild(script)
-    } else if ((window as any).turnstile) {
-      // Script is already loaded, render widget immediately
-      (window as any).onloadTurnstileCallback()
-    }
-
-    return () => {
-      // Clean up callback, but keep script in DOM for caching
-      delete (window as any).onloadTurnstileCallback
-    }
-  }, [])
-
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -111,12 +56,6 @@ export default function RegisterPage() {
       return
     }
 
-    if (!turnstileToken) {
-      setError('Please complete the anti-bot verification.')
-      setLoading(false)
-      return
-    }
-
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
@@ -128,10 +67,6 @@ export default function RegisterPage() {
       if (!res.ok || !data.success) {
         setError(data.error || 'Failed to create account. Please try again.');
         setLoading(false);
-        if ((window as any).turnstile) {
-          (window as any).turnstile.reset('#turnstile-container');
-        }
-        setTurnstileToken(null);
         return;
       }
 
@@ -276,17 +211,6 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Cloudflare Turnstile */}
-              <div className="space-y-2">
-                <label className="block text-[9px] font-black uppercase tracking-widest text-[var(--silver-500)] font-mono ml-1">
-                  Anti-Bot Verification
-                </label>
-                <div className="flex justify-center p-3 rounded-xl bg-black/30 border border-[var(--border-soft)] overflow-hidden">
-                  <div className="cf-turnstile-wrapper">
-                    <div id="turnstile-container" className="cf-turnstile"></div>
-                  </div>
-                </div>
-              </div>
 
               {/* Error Output */}
               {error && (
