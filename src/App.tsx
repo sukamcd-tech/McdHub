@@ -28,6 +28,7 @@ import { LogsPage } from './pages/admin/LogsPage';
 import { SecurityPage } from './pages/admin/SecurityPage';
 import { AdminProfilePage } from './pages/admin/AdminProfilePage';
 import { ClientProjectsPage } from './pages/admin/ClientProjectsPage';
+import { BusinessOverviewPage } from './pages/admin/BusinessOverviewPage';
 
 export function App() {
   return (
@@ -56,6 +57,7 @@ export function App() {
           <Route path="projects" element={<AdminProjectsPage />} />
           <Route path="promos" element={<PromosPage />} />
           <Route path="apps" element={<AppsPage />} />
+          <Route path="business-overview" element={<BusinessOverviewPage />} />
           <Route path="client-projects" element={<ClientProjectsPage />} />
           <Route path="mcdcrypt" element={<McdCryptPage />} />
           <Route path="mcdai" element={<McdAIPage />} />

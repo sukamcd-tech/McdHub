@@ -15,6 +15,7 @@ import {
   Ticket,
   Smartphone,
   Briefcase,
+  TrendingUp,
 } from "lucide-react";
 
 const navigationGroups = [
@@ -31,6 +32,7 @@ const navigationGroups = [
   {
     title: "Business",
     items: [
+      { name: "Business Overview", href: "/admin/business-overview", icon: TrendingUp },
       { name: "Client Projects", href: "/admin/client-projects", icon: Briefcase },
     ],
   },

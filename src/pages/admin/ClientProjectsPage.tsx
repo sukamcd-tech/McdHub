@@ -577,16 +577,21 @@ export const ClientProjectsPage: React.FC = () => {
   };
 
   const moveTaskStatus = async (taskId: string, newStatus: ClientTask["status"]) => {
+    // Optimistic update
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+    );
     try {
-      // Optimistic update
-      setTasks((prev) =>
-        prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
-      );
-      await fetch(`/api/clients/tasks/${taskId}`, {
+      const res = await fetch(`/api/clients/tasks/${taskId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
+      const data = (await res.json()) as any;
+      if (!data.success) {
+        console.error("Update task status failed on server:", data.error);
+        fetchData();
+      }
     } catch (err) {
       console.error("Move task failed:", err);
       fetchData();
@@ -1155,7 +1160,17 @@ export const ClientProjectsPage: React.FC = () => {
                   </div>
 
                   {/* Task Cards Container */}
-                  <div className="p-3 space-y-2.5 min-h-[350px] max-h-[600px] overflow-y-auto custom-scrollbar">
+                  <div
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const taskId = e.dataTransfer.getData("text/plain");
+                      if (taskId) {
+                        moveTaskStatus(taskId, col.id);
+                      }
+                    }}
+                    className="p-3 space-y-2.5 min-h-[350px] max-h-[600px] overflow-y-auto custom-scrollbar transition-colors"
+                  >
                     {colTasks.length === 0 ? (
                       <div className="h-32 flex items-center justify-center text-center text-[9px] font-mono uppercase tracking-widest text-zinc-600">
                         Tidak ada task
@@ -1173,7 +1188,11 @@ export const ClientProjectsPage: React.FC = () => {
                         return (
                           <div
                             key={task.id}
-                            className="p-3.5 rounded-lg bg-[#1c1c22] border border-white/[0.06] hover:border-white/[0.14] transition-all space-y-2.5"
+                            draggable
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData("text/plain", task.id);
+                            }}
+                            className="p-3.5 rounded-lg bg-[#1c1c22] border border-white/[0.06] hover:border-white/[0.18] transition-all space-y-2.5 cursor-grab active:cursor-grabbing"
                           >
                             {/* Title & Priority */}
                             <div className="flex items-start justify-between gap-2">

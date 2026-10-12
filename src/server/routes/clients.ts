@@ -304,19 +304,19 @@ clientsRoute.put('/tasks/:id', requireAuth('admin'), async (c) => {
            credentials_handed_over = COALESCE(?, credentials_handed_over)
        WHERE id = ?`,
       [
-        client_id,
-        title,
-        description,
-        status,
-        priority,
+        client_id !== undefined ? client_id : null,
+        title !== undefined ? title : null,
+        description !== undefined ? description : null,
+        status !== undefined ? status : null,
+        priority !== undefined ? priority : null,
         budget !== undefined ? Number(budget) : null,
         paid !== undefined ? (paid ? 1 : 0) : null,
-        deadline,
-        domain_name,
+        deadline !== undefined ? deadline : null,
+        domain_name !== undefined ? domain_name : null,
         domain_price !== undefined ? Number(domain_price) : null,
-        staging_url,
+        staging_url !== undefined ? staging_url : null,
         stage_step !== undefined ? Number(stage_step) : null,
-        warranty_ends_at,
+        warranty_ends_at !== undefined ? warranty_ends_at : null,
         cloudflare_connected !== undefined ? (cloudflare_connected ? 1 : 0) : null,
         credentials_handed_over !== undefined ? (credentials_handed_over ? 1 : 0) : null,
         id,
@@ -530,3 +530,86 @@ clientsRoute.delete('/invoices/:id', requireAuth('admin'), async (c) => {
     return c.json({ success: false, error: error.message }, 500);
   }
 });
+
+// GET /api/clients/overview (Business & Financial Metrics)
+clientsRoute.get('/overview', requireAuth('admin'), async (c) => {
+  try {
+    await ensureTables(c.env.DB);
+
+    // 1. Total Metrics
+    const totalCashInResult = await queryOne<{ total: number }>(
+      c.env.DB,
+      "SELECT COALESCE(SUM(amount), 0) as total FROM client_invoices WHERE status = 'paid'"
+    );
+    const pendingInvoicesResult = await queryOne<{ total: number }>(
+      c.env.DB,
+      "SELECT COALESCE(SUM(amount), 0) as total FROM client_invoices WHERE status = 'pending'"
+    );
+    const activeClientsCount = await queryOne<{ count: number }>(
+      c.env.DB,
+      "SELECT COUNT(*) as count FROM client_contacts WHERE status = 'active'"
+    );
+    const totalClientsCount = await queryOne<{ count: number }>(
+      c.env.DB,
+      "SELECT COUNT(*) as count FROM client_contacts"
+    );
+
+    // 2. Freelance 50-50 Pipeline Distribution
+    const pipelineCounts = await query<{ stage_step: number; count: number }>(
+      c.env.DB,
+      "SELECT stage_step, COUNT(*) as count FROM client_tasks GROUP BY stage_step"
+    );
+
+    // 3. Monthly Revenue (Last 6 Months)
+    const monthlyRevenue = await query<{ month: string; total: number }>(
+      c.env.DB,
+      `SELECT strftime('%Y-%m', issue_date) as month, COALESCE(SUM(amount), 0) as total
+       FROM client_invoices
+       WHERE status = 'paid'
+       GROUP BY month
+       ORDER BY month DESC
+       LIMIT 6`
+    );
+
+    // 4. Upcoming Due Invoices
+    const upcomingInvoices = await query(
+      c.env.DB,
+      `SELECT i.*, c.name as client_name, c.company as client_company
+       FROM client_invoices i
+       LEFT JOIN client_contacts c ON i.client_id = c.id
+       WHERE i.status = 'pending'
+       ORDER BY i.due_date ASC
+       LIMIT 5`
+    );
+
+    // 5. Active Projects Status
+    const ongoingTasks = await query(
+      c.env.DB,
+      `SELECT t.*, c.name as client_name
+       FROM client_tasks t
+       LEFT JOIN client_contacts c ON t.client_id = c.id
+       WHERE t.status != 'done'
+       ORDER BY t.created_at DESC
+       LIMIT 6`
+    );
+
+    return c.json({
+      success: true,
+      data: {
+        total_cash_in: totalCashInResult?.total || 0,
+        pending_receivable: pendingInvoicesResult?.total || 0,
+        active_clients: activeClientsCount?.count || 0,
+        total_clients: totalClientsCount?.count || 0,
+        monthly_target: 10000000, // Rp 10.000.000 default target
+        pipeline: pipelineCounts || [],
+        monthly_revenue: (monthlyRevenue || []).reverse(),
+        upcoming_invoices: upcomingInvoices || [],
+        ongoing_tasks: ongoingTasks || [],
+      },
+    });
+  } catch (error: any) {
+    console.error('Business overview fetch error:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
