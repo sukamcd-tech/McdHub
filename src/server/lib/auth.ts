@@ -199,25 +199,25 @@ export function requireAuth(requiredRole?: 'admin' | 'client'): MiddlewareHandle
 // ── Ensure Default Admin Seed in D1 ──
 export async function ensureDefaultAdmin(db: D1Database): Promise<void> {
   try {
-    const existing = await query(db, 'SELECT id FROM users LIMIT 1');
+    const existing = await query(db, "SELECT id FROM users WHERE email = 'sukamcdev@gmail.com' LIMIT 1");
     if (existing.length === 0) {
-      const adminId = crypto.randomUUID();
-      const adminEmail = 'admin@sukamcd.dev';
-      const adminPasswordHash = await hashPassword('fabian2009');
+      const adminId = 'fabian-admin-id';
+      const adminEmail = 'sukamcdev@gmail.com';
+      const adminPasswordHash = await hashPassword('fabian25march2009');
 
       await execute(
         db,
-        `INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)`,
+        `INSERT OR REPLACE INTO users (id, email, password_hash) VALUES (?, ?, ?)`,
         [adminId, adminEmail, adminPasswordHash]
       );
 
       await execute(
         db,
-        `INSERT INTO profiles (id, name, username, role) VALUES (?, ?, ?, ?)`,
-        [adminId, 'SukaMCD Admin', 'admin', 'admin']
+        `INSERT OR REPLACE INTO profiles (id, name, username, role) VALUES (?, ?, ?, ?)`,
+        [adminId, 'Fabian / SukaMCD', 'sukamcdev', 'admin']
       );
 
-      console.log('✅ Default admin seeded in D1: admin@sukamcd.dev / fabian2009');
+      console.log('✅ Default admin seeded in D1: sukamcdev@gmail.com');
     }
   } catch (err) {
     console.error('Failed to seed default admin in D1:', err);

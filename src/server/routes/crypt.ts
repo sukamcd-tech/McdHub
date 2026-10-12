@@ -58,6 +58,65 @@ cryptRoute.post('/folders', requireAuth('admin'), async (c) => {
   }
 });
 
+// POST /api/mcdcrypt/upload
+cryptRoute.post('/upload', requireAuth('admin'), async (c) => {
+  const user = await getCurrentUser(c);
+  if (!user) return c.json({ error: 'Unauthorized' }, 401);
+
+  try {
+    const formData = await c.req.formData();
+    const file = formData.get('file') as File;
+    const parentId = formData.get('parent_id') as string | null;
+
+    if (!file) return c.json({ error: 'No file provided' }, 400);
+
+    const storagePath = `${user.id}/${Date.now()}-${file.name}.enc`;
+    await execute(
+      c.env.DB,
+      `INSERT INTO mcdcrypt_files (user_id, original_name, encrypted_path, mime_type, size, is_folder, parent_id)
+       VALUES (?, ?, ?, ?, ?, 0, ?)`,
+      [user.id, file.name, storagePath, file.type || 'application/octet-stream', file.size || 0, parentId ? Number(parentId) : null]
+    );
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// POST /api/mcdcrypt/duplicate/:id
+cryptRoute.post('/duplicate/:id', requireAuth('admin'), async (c) => {
+  const user = await getCurrentUser(c);
+  if (!user) return c.json({ error: 'Unauthorized' }, 401);
+
+  const id = c.req.param('id');
+  const { parent_id } = await c.req.json().catch(() => ({ parent_id: null }));
+
+  try {
+    const source = await queryOne<any>(c.env.DB, 'SELECT * FROM mcdcrypt_files WHERE id = ?', [Number(id)]);
+    if (!source) return c.json({ error: 'Source not found' }, 404);
+
+    await execute(
+      c.env.DB,
+      `INSERT INTO mcdcrypt_files (user_id, original_name, encrypted_path, mime_type, size, is_folder, parent_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        user.id,
+        `${source.original_name} (Copy)`,
+        source.encrypted_path,
+        source.mime_type,
+        source.size,
+        source.is_folder ? 1 : 0,
+        parent_id ? Number(parent_id) : null
+      ]
+    );
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
 // PUT /api/mcdcrypt/rename/:id
 cryptRoute.put('/rename/:id', requireAuth('admin'), async (c) => {
   const id = c.req.param('id');
