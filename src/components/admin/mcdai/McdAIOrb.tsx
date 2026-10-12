@@ -37,7 +37,7 @@ export function McdAIOrb({ status }: McdAIOrbProps) {
               animate={{ scale: 1.6, opacity: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
-              className="absolute inset-0 rounded-full border border-emerald-500/40"
+              className="absolute inset-0 rounded-full border border-zinc-400/40"
             />
           )}
         </AnimatePresence>
@@ -56,10 +56,8 @@ export function McdAIOrb({ status }: McdAIOrbProps) {
             status === "idle"
               ? "bg-zinc-600"
               : status === "thinking"
-              ? "bg-amber-500"
-              : status === "speaking"
-              ? "bg-emerald-500"
-              : "bg-emerald-500" // listening
+              ? "bg-zinc-400"
+              : "bg-zinc-200"
           }`}
         />
 
@@ -80,7 +78,7 @@ export function McdAIOrb({ status }: McdAIOrbProps) {
                 delay: d * 0.1,
                 ease: "easeInOut",
               }}
-              className="w-1 bg-emerald-500 rounded-full"
+              className="w-1 bg-zinc-200 rounded-full"
             />
           ))}
         </div>

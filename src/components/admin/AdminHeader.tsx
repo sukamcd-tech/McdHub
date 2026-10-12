@@ -85,15 +85,11 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ user, profile }) => {
       <div className="flex items-center gap-4 select-none">
         <div>
           <h1
-            className="text-sm font-black uppercase tracking-widest font-mono"
-            style={{ color: "var(--silver-200)" }}
+            className="text-sm font-black uppercase tracking-widest font-mono text-zinc-100"
           >
             {pageInfo.label}
           </h1>
-          <p
-            className="text-[9px] uppercase tracking-wider font-bold mt-0.5"
-            style={{ color: "var(--silver-600)" }}
-          >
+          <p className="text-[10px] uppercase tracking-wider font-semibold mt-0.5 text-zinc-400">
             {pageInfo.sub}
           </p>
         </div>
@@ -102,46 +98,28 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ user, profile }) => {
       {/* ── Right: Clock & User Info ── */}
       <div className="flex items-center gap-6">
         <div className="hidden sm:flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-zinc-400">
-            <Clock className="w-3.5 h-3.5" style={{ color: "var(--silver-500)" }} />
-            <span
-              className="text-[10px] font-mono font-bold tracking-wider"
-              style={{ color: "var(--silver-400)" }}
-            >
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.02] border border-white/[0.06]">
+            <Clock className="w-3.5 h-3.5 text-zinc-400" />
+            <span className="text-[10px] font-mono font-bold tracking-wider text-zinc-300">
               {currentTime}
             </span>
           </div>
 
-          <div
-            className="h-3 w-px"
-            style={{ background: "var(--border-subtle)" }}
-          />
-
-          <span
-            className="text-[9px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded"
-            style={{
-              background: "var(--bg-elevated)",
-              border: "1px solid var(--border-subtle)",
-              color: "var(--silver-500)",
-            }}
-          >
-            UPTIME: {uptime}
-          </span>
+          <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/[0.02] border border-white/[0.06]">
+            <span className="w-1.5 h-1.5 rounded-full bg-zinc-300" />
+            <span className="text-[9px] font-mono font-bold tracking-wider uppercase text-zinc-400">
+              UPTIME: {uptime}
+            </span>
+          </div>
         </div>
 
         {/* User badge */}
-        <div className="flex items-center gap-3 pl-4 border-l border-white/[0.04]">
+        <div className="flex items-center gap-3 pl-4 border-l border-white/[0.06]">
           <div className="flex flex-col items-end hidden md:flex">
-            <span
-              className="text-xs font-bold leading-tight"
-              style={{ color: "var(--silver-200)" }}
-            >
+            <span className="text-xs font-bold text-zinc-100 leading-tight">
               {user.name || username}
             </span>
-            <span
-              className="text-[8px] font-mono font-black uppercase tracking-wider"
-              style={{ color: "var(--silver-600)" }}
-            >
+            <span className="text-[8px] font-mono font-black uppercase tracking-wider text-zinc-400">
               {user.role || "ADMIN"}
             </span>
           </div>

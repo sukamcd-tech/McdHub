@@ -256,17 +256,17 @@ export const PromosPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-stretch gap-2.5">
-            <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.15)] text-xs text-emerald-400">
-              <CheckCircle className="w-3.5 h-3.5" />
+          <div className="flex items-stretch gap-2">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#141418] border border-white/[0.06] text-xs text-zinc-300">
+              <CheckCircle className="w-3.5 h-3.5 text-zinc-400" />
               <span>
-                Aktif: <strong>{totalActive}</strong>
+                Aktif: <strong className="text-zinc-100">{totalActive}</strong>
               </span>
             </div>
-            <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[rgba(239,68,68,0.08)] border border-[rgba(239,68,68,0.15)] text-xs text-rose-400">
-              <XCircle className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#141418] border border-white/[0.06] text-xs text-zinc-400">
+              <XCircle className="w-3.5 h-3.5 text-zinc-400" />
               <span>
-                Nonaktif: <strong>{totalInactive}</strong>
+                Nonaktif: <strong className="text-zinc-300">{totalInactive}</strong>
               </span>
             </div>
           </div>
@@ -389,15 +389,15 @@ export const PromosPage: React.FC = () => {
                         }
                         className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold border cursor-pointer select-none transition-all ${
                           promo.is_active
-                            ? "bg-[rgba(16,185,129,0.08)] border-[rgba(16,185,129,0.2)] text-emerald-400 hover:bg-[rgba(16,185,129,0.15)]"
-                            : "bg-[rgba(239,68,68,0.08)] border-[rgba(239,68,68,0.2)] text-rose-400 hover:bg-[rgba(239,68,68,0.15)]"
+                            ? "bg-white/[0.08] border-white/[0.18] text-zinc-100 hover:bg-white/[0.12]"
+                            : "bg-black/30 border-white/[0.06] text-zinc-500 hover:bg-black/50"
                         }`}
                       >
                         <span
                           className={`w-1.5 h-1.5 rounded-full ${
                             promo.is_active
-                              ? "bg-emerald-400 animate-pulse"
-                              : "bg-rose-400"
+                              ? "bg-zinc-200"
+                              : "bg-zinc-600"
                           }`}
                         />
                         {promo.is_active ? "Aktif" : "Nonaktif"}

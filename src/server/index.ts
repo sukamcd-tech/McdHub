@@ -13,6 +13,7 @@ import { securityRoute } from './routes/security';
 import { cryptRoute } from './routes/crypt';
 import { backupRoute } from './routes/backup';
 import { aiRoute } from './routes/ai';
+import { clientsRoute } from './routes/clients';
 
 export type Bindings = {
   DB: D1Database;
@@ -60,6 +61,7 @@ api.route('/security', securityRoute);
 api.route('/mcdcrypt', cryptRoute);
 api.route('/backup', backupRoute);
 api.route('/ai', aiRoute);
+api.route('/clients', clientsRoute);
 
 app.route('/api', api);
 

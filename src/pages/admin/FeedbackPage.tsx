@@ -182,54 +182,35 @@ export const FeedbackPage: React.FC = () => {
           </h1>
         </div>
 
-        {/* Stat Pills */}
-        <div className="flex items-stretch gap-3">
+        {/* Stat Pills (Compact & Silver Focus) */}
+        <div className="flex items-stretch gap-2.5">
           {[
             {
               icon: Bug,
               count: totalOpenBug,
               label: "Bug Aktif",
-              accent: "#ef4444",
-              bg: "rgba(239,68,68,0.08)",
-              border: "rgba(239,68,68,0.2)",
             },
             {
               icon: Lightbulb,
               count: totalOpenSaran,
               label: "Saran",
-              accent: "#10b981",
-              bg: "rgba(16,185,129,0.08)",
-              border: "rgba(16,185,129,0.2)",
             },
             {
               icon: CheckCircle2,
               count: totalResolved,
               label: "Selesai",
-              accent: "var(--silver-300)",
-              bg: "var(--bg-elevated)",
-              border: "var(--border-soft)",
             },
           ].map((item) => (
             <div
               key={item.label}
-              className="flex items-center gap-3 px-5 py-3 rounded-xl"
-              style={{ background: item.bg, border: `1px solid ${item.border}` }}
+              className="flex items-center gap-2.5 px-3.5 py-2 rounded-lg bg-[#141418] border border-white/[0.06]"
             >
-              <item.icon
-                className="w-4 h-4 shrink-0"
-                style={{ color: item.accent }}
-              />
+              <item.icon className="w-3.5 h-3.5 shrink-0 text-zinc-400" />
               <div>
-                <p
-                  className="text-[8px] font-black uppercase tracking-widest font-mono leading-none mb-0.5"
-                  style={{ color: "var(--silver-600)" }}
-                >
+                <p className="text-[7.5px] font-black uppercase tracking-wider font-mono leading-none mb-0.5 text-zinc-400">
                   {item.label}
                 </p>
-                <p
-                  className="text-2xl font-light leading-none"
-                  style={{ color: item.accent }}
-                >
+                <p className="text-lg font-black font-mono leading-none text-zinc-100">
                   {item.count}
                 </p>
               </div>
@@ -410,8 +391,8 @@ export const FeedbackPage: React.FC = () => {
                     <div
                       className={`p-2 rounded-lg border mt-0.5 shrink-0 ${
                         item.type === "bug"
-                          ? "bg-red-900/10 text-red-500 border-red-500/20"
-                          : "bg-emerald-900/10 text-emerald-400 border-emerald-500/20"
+                          ? "bg-white/[0.04] text-zinc-300 border-white/[0.08]"
+                          : "bg-white/[0.08] text-zinc-100 border-white/[0.14]"
                       }`}
                     >
                       {item.type === "bug" ? (
@@ -430,22 +411,13 @@ export const FeedbackPage: React.FC = () => {
                           {item.user_email || "Anonim"}
                         </span>
                         <span
-                          className={`text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider shrink-0 ${
+                          className={`text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider shrink-0 border ${
                             item.priority === "tinggi"
-                              ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                              ? "bg-white/10 text-zinc-100 border-white/20"
                               : item.priority === "normal"
-                              ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                              : "border"
+                              ? "bg-white/[0.06] text-zinc-300 border-white/[0.1]"
+                              : "bg-white/[0.02] text-zinc-500 border-white/[0.05]"
                           }`}
-                          style={
-                            item.priority === "rendah"
-                              ? {
-                                  background: "var(--bg-hover)",
-                                  color: "var(--silver-600)",
-                                  borderColor: "var(--border-subtle)",
-                                }
-                              : {}
-                          }
                         >
                           {item.priority}
                         </span>
@@ -502,23 +474,23 @@ export const FeedbackPage: React.FC = () => {
         >
           {selectedFeedback ? (
             <div className="flex flex-col h-full min-h-0">
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-7 space-y-6 min-h-0">
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-5 min-h-0">
                 <div
-                  className="flex flex-wrap items-center justify-between gap-4 pb-5"
+                  className="flex flex-wrap items-center justify-between gap-4 pb-4"
                   style={{ borderBottom: "1px solid var(--border-subtle)" }}
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`p-3 rounded-xl border ${
+                      className={`p-2.5 rounded-xl border ${
                         selectedFeedback.type === "bug"
-                          ? "bg-red-500/8 text-red-500 border-red-500/20"
-                          : "bg-emerald-500/8 text-emerald-400 border-emerald-500/20"
+                          ? "bg-white/[0.04] text-zinc-300 border-white/[0.08]"
+                          : "bg-white/[0.08] text-zinc-100 border-white/[0.14]"
                       }`}
                     >
                       {selectedFeedback.type === "bug" ? (
-                        <Bug className="w-5 h-5" />
+                        <Bug className="w-4 h-4" />
                       ) : (
-                        <Lightbulb className="w-5 h-5" />
+                        <Lightbulb className="w-4 h-4" />
                       )}
                     </div>
                     <div>
@@ -529,7 +501,7 @@ export const FeedbackPage: React.FC = () => {
                         Tipe Laporan
                       </div>
                       <h2
-                        className="text-lg font-bold tracking-tight capitalize"
+                        className="text-base font-bold tracking-tight capitalize"
                         style={{ color: "var(--silver-100)" }}
                       >
                         {selectedFeedback.type === "bug"
@@ -558,22 +530,17 @@ export const FeedbackPage: React.FC = () => {
                       style={{
                         background: "var(--bg-elevated)",
                         border: "1px solid var(--border-soft)",
-                        color:
-                          selectedFeedback.priority === "tinggi"
-                            ? "#ef4444"
-                            : selectedFeedback.priority === "normal"
-                            ? "#f59e0b"
-                            : "var(--silver-500)",
+                        color: "var(--silver-200)",
                       }}
                     >
                       <option value="rendah" style={{ background: "#111118" }}>
-                        🟢 RENDAH
+                        RENDAH
                       </option>
                       <option value="normal" style={{ background: "#111118" }}>
-                        🟡 NORMAL
+                        NORMAL
                       </option>
                       <option value="tinggi" style={{ background: "#111118" }}>
-                        🔴 TINGGI
+                        TINGGI
                       </option>
                     </select>
                   </div>
@@ -770,7 +737,7 @@ export const FeedbackPage: React.FC = () => {
               </div>
 
               <div
-                className="flex-shrink-0 px-7 py-4 flex justify-between items-center gap-4"
+                className="flex-shrink-0 px-5 py-3.5 flex justify-between items-center gap-4"
                 style={{
                   borderTop: "1px solid var(--border-subtle)",
                   background: "rgba(10,10,14,0.3)",
@@ -778,7 +745,7 @@ export const FeedbackPage: React.FC = () => {
               >
                 <button
                   onClick={() => handleDelete(selectedFeedback.id)}
-                  className="px-5 py-3 rounded-xl text-xs flex items-center gap-2 font-bold uppercase tracking-widest cursor-pointer transition-all"
+                  className="px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 font-bold uppercase tracking-widest cursor-pointer transition-all"
                   style={{
                     background: "var(--bg-elevated)",
                     border: "1px solid var(--border-subtle)",
@@ -786,10 +753,10 @@ export const FeedbackPage: React.FC = () => {
                   }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLElement).style.background =
-                      "rgba(239,68,68,0.08)";
+                      "rgba(255,255,255,0.05)";
                     (e.currentTarget as HTMLElement).style.borderColor =
-                      "rgba(239,68,68,0.2)";
-                    (e.currentTarget as HTMLElement).style.color = "#ef4444";
+                      "var(--border-silver)";
+                    (e.currentTarget as HTMLElement).style.color = "var(--silver-200)";
                   }}
                   onMouseLeave={(e) => {
                     (e.currentTarget as HTMLElement).style.background =
@@ -806,7 +773,7 @@ export const FeedbackPage: React.FC = () => {
                 {selectedFeedback.status === "open" ? (
                   <button
                     onClick={() => handleResolve(selectedFeedback.id)}
-                    className="px-6 py-3 rounded-xl text-xs flex items-center gap-2 font-black uppercase tracking-widest cursor-pointer transition-all"
+                    className="px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 font-black uppercase tracking-widest cursor-pointer transition-all"
                     style={{
                       background: "var(--silver-200)",
                       color: "#0f0f13",
@@ -815,24 +782,21 @@ export const FeedbackPage: React.FC = () => {
                     onMouseEnter={(e) => {
                       (e.currentTarget as HTMLElement).style.background =
                         "var(--silver-100)";
-                      (e.currentTarget as HTMLElement).style.boxShadow =
-                        "0 0 16px var(--silver-glow)";
                     }}
                     onMouseLeave={(e) => {
                       (e.currentTarget as HTMLElement).style.background =
                         "var(--silver-200)";
-                      (e.currentTarget as HTMLElement).style.boxShadow = "none";
                     }}
                   >
                     <Check className="w-4 h-4 stroke-[2.5px]" /> Tandai Selesai
                   </button>
                 ) : (
                   <span
-                    className="px-5 py-3 text-xs font-black uppercase tracking-widest rounded-xl flex items-center gap-2"
+                    className="px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl flex items-center gap-2"
                     style={{
-                      background: "rgba(16,185,129,0.08)",
-                      border: "1px solid rgba(16,185,129,0.2)",
-                      color: "#10b981",
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.14)",
+                      color: "var(--silver-200)",
                     }}
                   >
                     <Check className="w-4 h-4 stroke-[2.5px]" /> Selesai

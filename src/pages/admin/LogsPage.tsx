@@ -50,26 +50,26 @@ export const LogsPage: React.FC = () => {
     switch (category) {
       case "SECURITY":
         return {
-          bg: "rgba(239,68,68,0.06)",
-          border: "rgba(239,68,68,0.2)",
-          text: "#ef4444",
+          bg: "rgba(255,255,255,0.08)",
+          border: "rgba(255,255,255,0.18)",
+          text: "var(--silver-200)",
         };
       case "USER_ACTION":
         return {
-          bg: "rgba(16,185,129,0.06)",
-          border: "rgba(16,185,129,0.2)",
-          text: "#10b981",
+          bg: "rgba(255,255,255,0.05)",
+          border: "rgba(255,255,255,0.12)",
+          text: "var(--silver-300)",
         };
       case "DATABASE":
         return {
-          bg: "rgba(212,212,216,0.06)",
-          border: "rgba(212,212,216,0.15)",
+          bg: "rgba(255,255,255,0.04)",
+          border: "rgba(255,255,255,0.1)",
           text: "var(--silver-300)",
         };
       default:
         return {
           bg: "rgba(255,255,255,0.03)",
-          border: "var(--border-soft)",
+          border: "rgba(255,255,255,0.08)",
           text: "var(--silver-400)",
         };
     }
@@ -139,46 +139,41 @@ export const LogsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Metrics Strip ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      {/* ── Metrics Strip (Compact & Silver Focus) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         {[
           {
             label: "Active Stream",
             value: "Audit Pipeline Online",
             icon: Server,
-            color: "text-emerald-400",
           },
           {
             label: "Pipeline Status",
             value: "Operational",
             icon: CheckCircle2,
-            color: "text-emerald-400",
           },
           {
             label: "Active Buffer",
             value: `${logs.length} Buffered Events`,
             icon: Layers,
-            color: "text-[var(--silver-300)]",
           },
         ].map((stat, i) => {
           const Icon = stat.icon;
           return (
             <div
               key={i}
-              className="p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-center justify-between gap-4"
+              className="p-3 rounded-xl border border-white/[0.06] bg-[#141418] flex items-center justify-between gap-3"
             >
               <div>
-                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--silver-500)] font-mono">
+                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-zinc-400 font-mono">
                   {stat.label}
                 </span>
-                <p
-                  className={`text-xs font-bold font-mono tracking-tight ${stat.color} mt-1`}
-                >
+                <p className="text-xs font-bold font-mono tracking-tight text-zinc-200 mt-0.5">
                   {stat.value}
                 </p>
               </div>
-              <div className="p-2 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-soft)]">
-                <Icon className="w-4 h-4 text-[var(--silver-400)]" />
+              <div className="p-1.5 rounded-lg bg-[#1c1c22] border border-white/[0.08]">
+                <Icon className="w-4 h-4 text-zinc-400" />
               </div>
             </div>
           );
@@ -388,7 +383,7 @@ export const LogsPage: React.FC = () => {
                           Raw Metadata Object
                         </label>
                         <div className="p-3.5 rounded-xl bg-black/55 border border-[var(--border-subtle)] overflow-x-auto max-h-[160px] custom-scrollbar">
-                          <pre className="text-[9.5px] leading-relaxed text-emerald-400/80 font-mono">
+                          <pre className="text-[9.5px] leading-relaxed text-zinc-300 font-mono">
                             {JSON.stringify(selectedLog.metadata, null, 2)}
                           </pre>
                         </div>
@@ -398,7 +393,7 @@ export const LogsPage: React.FC = () => {
                     <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] select-none">
                       <Info className="w-4 h-4 text-[var(--silver-600)] shrink-0" />
                       <p className="text-[9.5px] font-mono uppercase text-[var(--silver-600)] leading-normal">
-                        Logs are immutable transaction hashes stored in the centralized system vault.
+                        Catatan audit sistem tersimpan terenkripsi pada database server.
                       </p>
                     </div>
                   </motion.div>
@@ -414,18 +409,13 @@ export const LogsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[var(--bg-surface)] border border-dashed border-[var(--border-soft)] shrink-0 select-none">
-            <div className="flex items-center justify-between mb-3.5">
-              <span className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2 font-mono text-[var(--silver-600)]">
-                <Clock className="w-3.5 h-3.5 text-[var(--silver-500)]" /> Pipeline Health
-              </span>
-              <span className="text-[8px] font-mono text-emerald-400 font-bold tracking-widest">
-                STABLE OPERATIONAL
-              </span>
-            </div>
-            <div className="w-full h-1 rounded-full bg-[var(--bg-active)] overflow-hidden">
-              <div className="w-[99%] h-full bg-emerald-500 rounded-full" />
-            </div>
+          <div className="p-3.5 rounded-xl bg-[#141418] border border-white/[0.06] shrink-0 select-none flex items-center justify-between">
+            <span className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2 font-mono text-zinc-400">
+              <Clock className="w-3.5 h-3.5 text-zinc-400" /> Pipeline Record
+            </span>
+            <span className="text-[8px] font-mono text-zinc-300 font-bold tracking-widest uppercase">
+              {logs.length} Logged Events
+            </span>
           </div>
         </div>
       </div>

@@ -145,58 +145,35 @@ export const OrdersPage: React.FC = () => {
           </h1>
         </div>
 
-        {/* Stat Pills */}
-        <div className="flex items-stretch gap-3">
+        {/* Stat Pills (Compact & Silver Focus) */}
+        <div className="flex items-stretch gap-2.5">
           {[
             {
               icon: Clock,
               count: totalPending,
               label: "Menunggu",
-              accent: "#f59e0b",
-              bg: "rgba(245,158,11,0.08)",
-              border: "rgba(245,158,11,0.2)",
             },
             {
               icon: RefreshCw,
               count: totalProcessing,
               label: "Diproses",
-              accent: "#38bdf8",
-              bg: "rgba(56,189,248,0.08)",
-              border: "rgba(56,189,248,0.2)",
             },
             {
               icon: CheckCircle,
               count: totalCompleted,
               label: "Selesai",
-              accent: "#10b981",
-              bg: "rgba(16,185,129,0.08)",
-              border: "rgba(16,185,129,0.2)",
             },
           ].map((item) => (
             <div
               key={item.label}
-              className="flex items-center gap-3 px-5 py-3 rounded-xl"
-              style={{ background: item.bg, border: `1px solid ${item.border}` }}
+              className="flex items-center gap-2.5 px-3.5 py-2 rounded-lg bg-[#141418] border border-white/[0.06]"
             >
-              <item.icon
-                className={`w-4 h-4 shrink-0 ${
-                  item.label === "Diproses"
-                    ? "animate-spin [animation-duration:3s]"
-                    : ""
-                }`}
-                style={{ color: item.accent }}
-              />
+              <item.icon className="w-3.5 h-3.5 shrink-0 text-zinc-400" />
               <div>
-                <p
-                  className="text-[8px] font-black uppercase tracking-widest font-mono leading-none mb-0.5"
-                  style={{ color: "var(--silver-600)" }}
-                >
+                <p className="text-[7.5px] font-black uppercase tracking-wider font-mono leading-none mb-0.5 text-zinc-400">
                   {item.label}
                 </p>
-                <p
-                  className="text-2xl font-light leading-none"
-                  style={{ color: item.accent }}
-                >
+                <p className="text-lg font-black font-mono leading-none text-zinc-100">
                   {item.count}
                 </p>
               </div>
@@ -311,16 +288,16 @@ export const OrdersPage: React.FC = () => {
                 const isSelected = item.id === selectedId;
 
                 let badgeColor =
-                  "text-amber-400 bg-amber-950/10 border-amber-800/30";
+                  "text-zinc-400 bg-white/[0.04] border-white/[0.08]";
                 if (item.status === "processing") {
                   badgeColor =
-                    "text-sky-400 bg-sky-950/10 border-sky-800/30";
+                    "text-zinc-300 bg-white/[0.08] border-white/[0.14]";
                 } else if (item.status === "completed") {
                   badgeColor =
-                    "text-emerald-400 bg-emerald-950/10 border-emerald-800/30";
+                    "text-zinc-100 bg-white/[0.12] border-white/[0.22]";
                 } else if (item.status === "cancelled") {
                   badgeColor =
-                    "text-red-400 bg-red-950/10 border-red-800/30";
+                    "text-zinc-500 bg-black/40 border-white/[0.05]";
                 }
 
                 return (
@@ -455,7 +432,7 @@ export const OrdersPage: React.FC = () => {
                           {selectedOrder.price}
                         </span>
                         {selectedOrder.promo_code && (
-                          <span className="px-2 py-0.5 rounded bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.15)] text-[8px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1 font-mono">
+                          <span className="px-2 py-0.5 rounded bg-white/[0.06] border border-white/[0.1] text-[8px] text-zinc-300 font-bold uppercase tracking-wider flex items-center gap-1 font-mono">
                             <Ticket className="w-2.5 h-2.5" />
                             Promo: {selectedOrder.promo_code}
                           </span>
@@ -660,12 +637,12 @@ export const OrdersPage: React.FC = () => {
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-bold uppercase border tracking-wider leading-none ${
                       selectedOrder.status === "pending"
-                        ? "text-amber-400 bg-amber-950/10 border-amber-800/30"
+                        ? "text-zinc-400 bg-white/[0.04] border-white/[0.08]"
                         : selectedOrder.status === "processing"
-                        ? "text-sky-400 bg-sky-950/10 border-sky-800/30"
+                        ? "text-zinc-300 bg-white/[0.08] border-white/[0.14]"
                         : selectedOrder.status === "completed"
-                        ? "text-emerald-400 bg-emerald-950/10 border-emerald-800/30"
-                        : "text-red-400 bg-red-950/10 border-red-800/30"
+                        ? "text-zinc-100 bg-white/[0.12] border-white/[0.22]"
+                        : "text-zinc-500 bg-black/40 border-white/[0.05]"
                     }`}
                   >
                     {selectedOrder.status === "pending"

@@ -212,9 +212,9 @@ export const AppsPage: React.FC = () => {
   } as React.CSSProperties;
 
   const typeColors: Record<string, string> = {
-    new: "text-emerald-400 bg-emerald-950/20 border-emerald-800/25",
-    fix: "text-amber-400 bg-amber-950/20 border-amber-800/25",
-    improve: "text-blue-400 bg-blue-950/20 border-blue-800/25",
+    new: "text-zinc-100 bg-white/[0.12] border-white/[0.22]",
+    fix: "text-zinc-300 bg-white/[0.08] border-white/[0.14]",
+    improve: "text-zinc-400 bg-white/[0.04] border-white/[0.08]",
   };
 
   const typeLabel: Record<string, string> = {
@@ -333,41 +333,27 @@ export const AppsPage: React.FC = () => {
             {releases.map((release) => (
               <div
                 key={release.id}
-                className="group relative overflow-hidden rounded-2xl transition-all duration-300 cursor-default"
-                style={{
-                  background: "var(--bg-surface)",
-                  border: "1px solid var(--border-subtle)",
-                  boxShadow: "0 2px 12px rgba(0,0,0,0.4)",
-                }}
+                className="group relative overflow-hidden rounded-xl transition-all duration-300 cursor-default bg-[#141418] border border-white/[0.06] hover:border-white/[0.12]"
               >
-                <div
-                  className="absolute top-0 left-0 right-0 h-px"
-                  style={{
-                    background: release.is_latest
-                      ? "linear-gradient(90deg, transparent, rgba(16,185,129,0.6), transparent)"
-                      : "linear-gradient(90deg, transparent, var(--border-soft), transparent)",
-                  }}
-                />
-
-                <div className="p-6">
-                  <div className="flex items-start justify-between gap-4 mb-4 select-none">
+                <div className="p-4 sm:p-4.5">
+                  <div className="flex items-start justify-between gap-4 mb-3 select-none">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] font-black uppercase tracking-widest font-mono px-2 py-0.5 rounded bg-[var(--bg-active)] border border-[var(--border-soft)] text-[var(--silver-400)]">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[8.5px] font-black uppercase tracking-widest font-mono px-2 py-0.5 rounded bg-[#1c1c22] border border-white/[0.06] text-zinc-400">
                           {release.app_name}
                         </span>
                         {release.is_latest && (
-                          <span className="text-[9px] font-black uppercase tracking-widest font-mono px-2 py-0.5 rounded bg-emerald-950/20 border border-emerald-800/30 text-emerald-400">
+                          <span className="text-[8.5px] font-black uppercase tracking-widest font-mono px-2 py-0.5 rounded bg-[#1c1c22] border border-white/[0.08] text-zinc-300">
                             Latest Version
                           </span>
                         )}
                         {release.force_update && (
-                          <span className="text-[9px] font-black uppercase tracking-widest font-mono px-2 py-0.5 rounded bg-red-950/20 border border-red-800/30 text-red-400">
+                          <span className="text-[8.5px] font-black uppercase tracking-widest font-mono px-2 py-0.5 rounded bg-[#1c1c22] border border-white/[0.08] text-zinc-400">
                             Force Update
                           </span>
                         )}
                       </div>
-                      <h3 className="text-lg font-black tracking-tight text-[var(--silver-100)] flex items-baseline gap-1">
+                      <h3 className="text-base font-black tracking-tight text-zinc-100 flex items-baseline gap-1">
                         v{release.version}
                       </h3>
                     </div>

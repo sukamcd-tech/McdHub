@@ -190,3 +190,54 @@ CREATE TABLE IF NOT EXISTS mcdwallet_download_stats (
   user_agent TEXT
 );
 
+-- 14. CLIENT CONTACTS
+CREATE TABLE IF NOT EXISTS client_contacts (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  company TEXT,
+  email TEXT,
+  phone TEXT,
+  status TEXT DEFAULT 'active', -- 'active' | 'lead' | 'completed'
+  notes TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 15. CLIENT TASKS (KANBAN & 50-50 FREELANCE PIPELINE)
+CREATE TABLE IF NOT EXISTS client_tasks (
+  id TEXT PRIMARY KEY,
+  client_id TEXT REFERENCES client_contacts(id) ON DELETE SET NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  status TEXT DEFAULT 'todo', -- 'todo' | 'in_progress' | 'review' | 'done'
+  priority TEXT DEFAULT 'medium', -- 'low' | 'medium' | 'high' | 'urgent'
+  budget REAL DEFAULT 0,
+  paid INTEGER DEFAULT 0, -- 0: Belum, 1: Lunas
+  deadline TEXT,
+  domain_name TEXT, -- e.g. 'klienstore.com'
+  domain_price REAL DEFAULT 0, -- 100% dibebankan di Invoice 1
+  staging_url TEXT, -- e.g. 'https://project-preview.pages.dev'
+  stage_step INTEGER DEFAULT 1, -- 1: Menunggu DP 50% & Domain, 2: Pengerjaan Staging, 3: Web ACC (Pelunasan 50%), 4: Handover & Garansi Aktif
+  warranty_ends_at TEXT, -- Tanggal berakhir masa garansi 3 bulan
+  cloudflare_connected INTEGER DEFAULT 0, -- 1 jika domain sudah disambungkan ke Cloudflare
+  credentials_handed_over INTEGER DEFAULT 0, -- 1 jika akun/email kredensial sudah diserahkan
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 16. CLIENT INVOICES (50-50 MILESTONES)
+CREATE TABLE IF NOT EXISTS client_invoices (
+  id TEXT PRIMARY KEY,
+  invoice_number TEXT UNIQUE NOT NULL,
+  client_id TEXT REFERENCES client_contacts(id) ON DELETE SET NULL,
+  task_id TEXT REFERENCES client_tasks(id) ON DELETE SET NULL,
+  invoice_type TEXT DEFAULT 'general', -- 'dp_50' | 'final_50' | 'general'
+  project_title TEXT NOT NULL,
+  amount REAL NOT NULL,
+  status TEXT DEFAULT 'pending', -- 'draft' | 'pending' | 'paid' | 'overdue'
+  issue_date TEXT NOT NULL,
+  due_date TEXT NOT NULL,
+  items_json TEXT,
+  notes TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+

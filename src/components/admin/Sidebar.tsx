@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutGrid,
-  Folder,
-  MessageSquare,
   MessageSquarePlus,
   Rocket,
   UploadCloud,
@@ -16,6 +14,7 @@ import {
   ShoppingBag,
   Ticket,
   Smartphone,
+  Briefcase,
 } from "lucide-react";
 
 const navigationGroups = [
@@ -30,10 +29,14 @@ const navigationGroups = [
     ],
   },
   {
+    title: "Business",
+    items: [
+      { name: "Client Projects", href: "/admin/client-projects", icon: Briefcase },
+    ],
+  },
+  {
     title: "Services",
     items: [
-      { name: "McdCrypt", href: "/admin/mcdcrypt", icon: Folder },
-      { name: "McdAI", href: "/admin/mcdai", icon: MessageSquare },
       { name: "Feedback", href: "/admin/feedback", icon: MessageSquarePlus },
     ],
   },
@@ -97,11 +100,8 @@ export const Sidebar: React.FC = () => {
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="dot-online animate-emerald-pulse" />
-              <p
-                className="text-[8px] uppercase tracking-[0.22em] font-black font-mono truncate"
-                style={{ color: "var(--silver-600)" }}
-              >
+              <span className="w-1.5 h-1.5 rounded-full bg-zinc-300" />
+              <p className="text-[9px] uppercase tracking-[0.2em] font-bold font-mono truncate text-zinc-400">
                 Secure Online
               </p>
             </div>
@@ -129,18 +129,13 @@ export const Sidebar: React.FC = () => {
       {/* ── Toggle Button ── */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-[72px] w-6 h-6 rounded-full flex items-center justify-center z-30 cursor-pointer transition-all hover:scale-110"
-        style={{
-          background: "var(--bg-elevated)",
-          border: "1px solid var(--border-silver)",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
-          color: "var(--silver-400)",
-        }}
+        className="absolute -right-3 top-[72px] w-6 h-6 rounded-full flex items-center justify-center z-30 cursor-pointer transition-all hover:scale-110 active:scale-95 bg-zinc-800 border border-zinc-600/60 shadow-lg text-zinc-300 hover:text-white"
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         {collapsed ? (
-          <ChevronRight className="w-3 h-3" />
+          <ChevronRight className="w-3.5 h-3.5" />
         ) : (
-          <ChevronLeft className="w-3 h-3" />
+          <ChevronLeft className="w-3.5 h-3.5" />
         )}
       </button>
 
@@ -149,10 +144,7 @@ export const Sidebar: React.FC = () => {
         {navigationGroups.map((group) => (
           <div key={group.title} className="mb-2">
             {!collapsed && (
-              <span
-                className="text-[8px] font-black uppercase tracking-[0.22em] block px-5 pt-3 pb-1.5 font-mono select-none"
-                style={{ color: "var(--silver-700)" }}
-              >
+              <span className="text-[9px] font-black uppercase tracking-[0.22em] block px-5 pt-3 pb-1.5 font-mono select-none text-zinc-400">
                 {group.title}
               </span>
             )}
@@ -176,38 +168,10 @@ export const Sidebar: React.FC = () => {
                     to={item.href}
                     title={collapsed ? item.name : undefined}
                     className={`
-                      relative flex items-center gap-3 rounded-xl transition-all duration-200 group select-none
+                      relative flex items-center gap-3 rounded-xl transition-all duration-200 group select-none active:scale-[0.98]
                       ${collapsed ? "justify-center px-0 py-3" : "px-3.5 py-2.5"}
-                      ${isActive ? "text-white" : "text-zinc-500 hover:text-zinc-200"}
+                      ${isActive ? "text-white font-bold bg-white/[0.08] border border-white/20 shadow-md" : "text-zinc-300 hover:text-white hover:bg-white/[0.04] border border-transparent"}
                     `}
-                    style={
-                      isActive
-                        ? {
-                            background: "var(--bg-active)",
-                            border: "1px solid var(--border-silver)",
-                            boxShadow:
-                              "0 2px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)",
-                          }
-                        : {
-                            border: "1px solid transparent",
-                          }
-                    }
-                    onMouseEnter={(e) => {
-                      if (!isActive) {
-                        (e.currentTarget as HTMLElement).style.background =
-                          "var(--bg-hover)";
-                        (e.currentTarget as HTMLElement).style.borderColor =
-                          "var(--border-subtle)";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) {
-                        (e.currentTarget as HTMLElement).style.background =
-                          "transparent";
-                        (e.currentTarget as HTMLElement).style.borderColor =
-                          "transparent";
-                      }
-                    }}
                   >
                     {isActive && !collapsed && (
                       <div className="nav-active-bar" />
@@ -219,16 +183,16 @@ export const Sidebar: React.FC = () => {
                       } ${
                         isActive
                           ? "text-white"
-                          : "text-zinc-600 group-hover:text-zinc-300"
+                          : "text-zinc-400 group-hover:text-zinc-200"
                       }`}
                     />
 
                     {!collapsed && (
                       <span
-                        className={`text-xs font-semibold tracking-tight truncate ${
+                        className={`text-xs tracking-tight truncate ${
                           isActive
                             ? "font-bold text-white"
-                            : "opacity-80 group-hover:opacity-100"
+                            : "font-medium text-zinc-300 group-hover:text-white"
                         }`}
                       >
                         {item.name}
@@ -237,8 +201,7 @@ export const Sidebar: React.FC = () => {
 
                     {collapsed && isActive && (
                       <span
-                        className="absolute right-1.5 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full"
-                        style={{ background: "var(--silver-300)" }}
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-zinc-300 shadow-[0_0_8px_rgba(255,255,255,0.4)]"
                       />
                     )}
                   </Link>
@@ -251,35 +214,15 @@ export const Sidebar: React.FC = () => {
 
       {/* ── Footer / Sign Out ── */}
       <div
-        className="shrink-0 p-2 border-t"
-        style={{
-          borderColor: "var(--border-subtle)",
-          background: "rgba(10,10,14,0.5)",
-        }}
+        className="shrink-0 p-2 border-t border-white/[0.06] bg-black/40"
       >
         <button
           onClick={handleLogout}
           title={collapsed ? "Sign Out" : undefined}
           className={`
-            w-full flex items-center gap-3 rounded-xl transition-all duration-200 group cursor-pointer
+            w-full flex items-center gap-3 rounded-xl transition-all duration-200 group cursor-pointer active:scale-95 text-zinc-400 hover:text-white hover:bg-white/[0.06] border border-transparent hover:border-white/10
             ${collapsed ? "justify-center px-0 py-3" : "px-3.5 py-2.5"}
           `}
-          style={{
-            color: "var(--silver-600)",
-            border: "1px solid transparent",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background =
-              "rgba(239,68,68,0.06)";
-            (e.currentTarget as HTMLElement).style.borderColor =
-              "rgba(239,68,68,0.15)";
-            (e.currentTarget as HTMLElement).style.color = "#ef4444";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "transparent";
-            (e.currentTarget as HTMLElement).style.borderColor = "transparent";
-            (e.currentTarget as HTMLElement).style.color = "var(--silver-600)";
-          }}
         >
           <LogOut
             className={`shrink-0 transition-all ${

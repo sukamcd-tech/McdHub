@@ -85,59 +85,59 @@ export const SecurityPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 select-none">
+    <div className="w-full h-full flex flex-col gap-5 animate-in fade-in duration-300 select-none">
       {/* ── Page Header ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-[var(--border-subtle)]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/[0.06]">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.3em] font-black text-[var(--silver-500)] font-mono mb-2">
+          <p className="text-[9px] uppercase tracking-[0.3em] font-black text-zinc-400 font-mono mb-1">
             Central Encryption & Access
           </p>
-          <h1 className="text-4xl font-black tracking-tight flex items-center gap-3 text-[var(--silver-100)]">
-            <ShieldCheck className="w-7 h-7 text-emerald-500" />
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2.5 text-zinc-100">
+            <ShieldCheck className="w-6 h-6 text-zinc-300" />
             Security Core
           </h1>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex flex-col items-end pr-4 border-r border-[var(--border-subtle)] font-mono">
-            <span className="text-[8px] font-black uppercase tracking-widest text-[var(--silver-600)]">
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col items-end pr-3 border-r border-white/[0.06] font-mono">
+            <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">
               Integrity Shield
             </span>
-            <span className="text-[10px] text-emerald-400 font-black mt-0.5 tracking-tighter">
-              MILITARY-GRADE ENCRYPTION
+            <span className="text-[9.5px] text-zinc-300 font-bold mt-0.5 tracking-wider">
+              ACTIVE ENCRYPTION
             </span>
           </div>
           <button
             onClick={fetchSecurityData}
             disabled={isLoading}
-            className="p-3 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-soft)] text-[var(--silver-500)] transition-all hover:border-[var(--border-silver)] hover:text-[var(--silver-200)] disabled:opacity-50 cursor-pointer"
+            className="p-2.5 rounded-xl bg-[#1c1c22] border border-white/[0.08] text-zinc-400 transition-all hover:border-zinc-500/40 hover:text-white disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw
-              className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
+              className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`}
             />
           </button>
         </div>
       </div>
 
       {/* ── Security Architecture Main Layout ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 min-h-0">
         {/* ── Left column: Env Health & Identity (3-cols) ── */}
-        <div className="lg:col-span-3 space-y-6 flex flex-col">
-          <div className="rounded-2xl overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex flex-col relative">
-            <div className="h-[2px] w-full bg-[rgba(255,255,255,0.02)]">
+        <div className="lg:col-span-3 space-y-4 flex flex-col">
+          <div className="rounded-xl overflow-hidden border border-white/[0.06] bg-[#141418] flex flex-col relative">
+            <div className="h-[2px] w-full bg-white/[0.04]">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${scanProgress}%` }}
-                className="h-full bg-gradient-to-r from-emerald-500 via-[var(--silver-300)] to-emerald-400"
+                className="h-full bg-zinc-300"
               />
             </div>
 
-            <div className="p-5 flex-1 flex flex-col justify-between gap-5">
+            <div className="p-4 flex-1 flex flex-col justify-between gap-4">
               <div className="flex items-center justify-between">
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--silver-600)] font-mono flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-amber-500" /> Daemon Health
+                <span className="text-[8.5px] font-black uppercase tracking-[0.2em] text-zinc-400 font-mono flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-zinc-300" /> Daemon Health
                 </span>
-                <span className="text-[8px] font-mono text-emerald-400 font-bold bg-emerald-950/20 px-2 py-0.5 rounded border border-emerald-800/10 shadow-[0_0_10px_rgba(16,185,129,0.05)]">
+                <span className="text-[8px] font-mono text-zinc-300 font-bold bg-[#1c1c22] px-2 py-0.5 rounded border border-white/[0.08]">
                   {scanProgress < 100 ? "SCANNING..." : "STABLE"}
                 </span>
               </div>
@@ -155,19 +155,19 @@ export const SecurityPage: React.FC = () => {
                 ].map((item, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between p-3 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)]"
+                    className="flex items-center justify-between p-2.5 rounded-lg bg-[#1c1c22] border border-white/[0.06]"
                   >
-                    <span className="text-[9.5px] font-bold font-mono text-[var(--silver-400)]">
+                    <span className="text-[9px] font-bold font-mono text-zinc-300">
                       {item.label}
                     </span>
                     {item.status ? (
-                      <div className="flex items-center gap-1.5 text-emerald-400 font-mono text-[8px] font-black uppercase">
-                        <ShieldCheck className="w-3 h-3" />
+                      <div className="flex items-center gap-1.5 text-zinc-300 font-mono text-[8px] font-black uppercase">
+                        <ShieldCheck className="w-3 h-3 text-zinc-300" />
                         <span>Enforced</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 text-amber-400 font-mono text-[8px] font-black uppercase">
-                        <ShieldAlert className="w-3 h-3" />
+                      <div className="flex items-center gap-1.5 text-zinc-400 font-mono text-[8px] font-black uppercase">
+                        <ShieldAlert className="w-3 h-3 text-zinc-400" />
                         <span>Standby</span>
                       </div>
                     )}
@@ -177,7 +177,7 @@ export const SecurityPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 flex flex-col gap-4 flex-1">
+          <div className="rounded-xl border border-white/[0.06] bg-[#141418] p-4 flex flex-col gap-3 flex-1">
             <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--silver-600)] font-mono flex items-center gap-1.5">
               <Fingerprint className="w-3.5 h-3.5 text-[var(--silver-400)]" /> Cryptography
             </span>
@@ -205,13 +205,13 @@ export const SecurityPage: React.FC = () => {
         </div>
 
         {/* ── Middle: RLS Panels & Threat Feed (6-cols) ── */}
-        <div className="lg:col-span-6 space-y-6 flex flex-col min-h-0">
-          <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--silver-600)] font-mono flex items-center gap-1.5 mb-4">
-              <HardDrive className="w-3.5 h-3.5 text-[var(--silver-400)]" /> Database Armor Protection
+        <div className="lg:col-span-6 space-y-4 flex flex-col min-h-0">
+          <div className="rounded-xl border border-white/[0.06] bg-[#141418] p-4">
+            <span className="text-[8.5px] font-black uppercase tracking-[0.2em] text-zinc-400 font-mono flex items-center gap-1.5 mb-3">
+              <HardDrive className="w-3.5 h-3.5 text-zinc-300" /> Database Armor Protection
             </span>
 
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-2">
               {(
                 overview?.rlsStatus || [
                   { table: "mcd_projects", status: "ARMED" },
@@ -222,12 +222,12 @@ export const SecurityPage: React.FC = () => {
               ).map((item: any, i: number) => (
                 <div
                   key={i}
-                  className="p-3 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex items-center justify-between gap-3 font-mono"
+                  className="p-2.5 rounded-lg bg-[#1c1c22] border border-white/[0.06] flex items-center justify-between gap-2 font-mono"
                 >
-                  <span className="text-[9.5px] font-bold text-[var(--silver-400)] truncate">
+                  <span className="text-[9px] font-bold text-zinc-300 truncate">
                     {item.table}
                   </span>
-                  <span className="px-2 py-0.5 rounded text-[6.5px] font-black uppercase tracking-wider bg-emerald-950/20 border border-emerald-800/25 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.05)]">
+                  <span className="px-2 py-0.5 rounded text-[7px] font-black uppercase tracking-wider bg-black/40 border border-white/[0.08] text-zinc-300">
                     {item.status}
                   </span>
                 </div>
@@ -253,10 +253,10 @@ export const SecurityPage: React.FC = () => {
                       animate={{ opacity: 1, x: 0 }}
                       className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] transition-all duration-300 hover:border-[var(--border-soft)] relative group"
                     >
-                      <div className="absolute top-0 bottom-0 left-0 w-0.5 rounded-l-xl bg-red-500/60 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute top-0 bottom-0 left-0 w-0.5 rounded-l-xl bg-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity" />
 
                       <div className="flex items-center justify-between gap-3 pl-1 font-mono">
-                        <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded bg-red-950/20 border border-red-800/20 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.05)]">
+                        <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded bg-[#1c1c22] border border-white/[0.08] text-zinc-300">
                           {log.action}
                         </span>
 
@@ -287,47 +287,45 @@ export const SecurityPage: React.FC = () => {
         </div>
 
         {/* ── Right column: Emergency Kill Switch (3-cols) ── */}
-        <div className="lg:col-span-3 space-y-6 flex flex-col">
-          <div className="rounded-2xl border border-dashed border-red-500/20 bg-[var(--bg-surface)] p-6 flex flex-col items-center justify-center text-center gap-5 flex-1 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-500/40 to-transparent animate-pulse" />
-
-            <div className="w-16 h-16 rounded-full flex items-center justify-center bg-red-950/20 border border-red-800/30 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.1)]">
-              <AlertOctagon className="w-8 h-8" />
+        <div className="lg:col-span-3 space-y-4 flex flex-col">
+          <div className="rounded-xl border border-white/[0.08] bg-[#141418] p-5 flex flex-col items-center justify-center text-center gap-4 flex-1">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#1c1c22] border border-white/[0.1] text-zinc-200 shadow-md">
+              <AlertOctagon className="w-6 h-6" />
             </div>
 
-            <div className="space-y-1.5">
-              <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--silver-200)] font-mono">
-                Emergency Kill-Switch
+            <div className="space-y-1">
+              <h4 className="text-[10.5px] font-black uppercase tracking-[0.1em] text-zinc-200 font-mono">
+                Emergency Revoke
               </h4>
-              <p className="text-[9px] leading-relaxed text-[var(--silver-600)] px-2 font-mono uppercase">
-                Terminate all active server session states globally.
+              <p className="text-[8.5px] leading-relaxed text-zinc-400 px-1 font-mono uppercase">
+                Terminate all active server session tokens.
               </p>
             </div>
 
             <button
               onClick={() => setIsConfirmModalOpen(true)}
               disabled={isRevoking}
-              className={`w-full py-3.5 rounded-xl flex items-center justify-center gap-2 border font-mono font-black uppercase tracking-widest text-[9.5px] transition-all cursor-pointer ${
+              className={`w-full py-2.5 rounded-lg flex items-center justify-center gap-2 border font-mono font-black uppercase tracking-widest text-[9px] transition-all cursor-pointer ${
                 isRevoking
-                  ? "bg-[var(--bg-elevated)] border-[var(--border-subtle)] text-[var(--silver-600)]"
-                  : "bg-red-500/80 border-red-500/20 text-white hover:bg-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] active:scale-[0.98]"
+                  ? "bg-[#1c1c22] border-white/[0.06] text-zinc-500"
+                  : "bg-zinc-200 text-black border-zinc-300 hover:bg-white active:scale-[0.98]"
               }`}
             >
               {isRevoking ? (
-                <Loader2 className="w-4 h-4 animate-spin text-[var(--silver-500)]" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
               ) : (
                 <>
                   <LogOut className="w-3.5 h-3.5" />
-                  Initiate Global Revoke
+                  Global Revoke
                 </>
               )}
             </button>
           </div>
 
-          <div className="p-4 rounded-2xl bg-amber-950/5 border border-amber-800/15 flex gap-3 items-center select-none shrink-0">
-            <Info className="w-4 h-4 text-amber-500 shrink-0" />
-            <p className="text-[9px] leading-relaxed font-mono uppercase text-[var(--silver-600)]">
-              All logins, access vectors, and security operations are audited by the SukaMCD security daemon.
+          <div className="p-3 rounded-xl bg-[#141418] border border-white/[0.06] flex gap-2.5 items-center select-none shrink-0">
+            <Info className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+            <p className="text-[8.5px] leading-relaxed font-mono uppercase text-zinc-400">
+              All logins & operations are audited by the security kernel.
             </p>
           </div>
         </div>
@@ -336,49 +334,47 @@ export const SecurityPage: React.FC = () => {
       {/* ── Emergency Revocation Modal ── */}
       <AnimatePresence>
         {isConfirmModalOpen && (
-          <div className="fixed inset-0 z-[600] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl">
+          <div className="fixed inset-0 z-[600] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl border border-red-500/30 bg-[var(--bg-elevated)]"
+              className="w-full max-w-sm rounded-xl overflow-hidden shadow-2xl border border-white/[0.1] bg-[#141418]"
             >
-              <div className="h-1 bg-gradient-to-r from-red-600 via-transparent to-red-600" />
-
-              <div className="p-8 flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center bg-red-950/20 border border-red-800/30 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.15)] mb-6">
-                  <AlertTriangle className="w-8 h-8" />
+              <div className="p-6 flex flex-col items-center text-center">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#1c1c22] border border-white/[0.1] text-zinc-200 mb-4">
+                  <AlertTriangle className="w-6 h-6" />
                 </div>
 
-                <h3 className="text-sm font-black uppercase tracking-[0.25em] font-mono text-[var(--silver-100)] mb-2">
+                <h3 className="text-sm font-black uppercase tracking-[0.25em] font-mono text-zinc-100 mb-2">
                   Session Revocation
                 </h3>
 
-                <p className="text-[10px] leading-relaxed font-mono uppercase text-[var(--silver-500)] mb-8 px-2">
-                  This action will force disconnect{" "}
-                  <span className="text-red-400 font-black">
-                    ALL SECURITY SESSIONS
+                <p className="text-[10px] leading-relaxed font-mono uppercase text-zinc-400 mb-6 px-2">
+                  Tindakan ini akan memutus{" "}
+                  <span className="text-zinc-100 font-black">
+                    SEMUA SESI LOGIN AKTIF
                   </span>{" "}
-                  across every client node. Do you proceed?
+                  di seluruh perangkat. Lanjutkan?
                 </p>
 
-                <div className="flex flex-col w-full gap-3">
+                <div className="flex flex-col w-full gap-2.5">
                   <button
                     onClick={handleGlobalSignOut}
                     disabled={isRevoking}
-                    className="w-full py-4 text-white font-mono font-black uppercase tracking-widest text-[10px] rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 bg-red-500 hover:bg-red-600 hover:shadow-[0_0_15px_rgba(239,68,68,0.35)]"
+                    className="w-full py-3 text-black font-mono font-black uppercase tracking-widest text-[9.5px] rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 bg-zinc-200 border border-zinc-300 hover:bg-white active:scale-[0.98]"
                   >
                     {isRevoking ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin text-zinc-600" />
                     ) : (
-                      "ENGAGE SYSTEM SHUTDOWN"
+                      "Putuskan Semua Sesi"
                     )}
                   </button>
                   <button
                     onClick={() => setIsConfirmModalOpen(false)}
-                    className="w-full py-4 font-mono font-black uppercase tracking-widest text-[10px] rounded-xl transition-all cursor-pointer bg-[var(--bg-hover)] border border-[var(--border-subtle)] text-[var(--silver-500)] hover:bg-[var(--bg-active)] hover:text-[var(--silver-200)]"
+                    className="w-full py-3 font-mono font-black uppercase tracking-widest text-[9.5px] rounded-lg transition-all cursor-pointer bg-[#1c1c22] border border-white/[0.08] text-zinc-400 hover:text-zinc-200"
                   >
-                    Abort Operation
+                    Batal
                   </button>
                 </div>
               </div>

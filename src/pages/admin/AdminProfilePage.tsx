@@ -153,14 +153,12 @@ export const AdminProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 select-none">
+    <div className="w-full max-w-6xl mx-auto space-y-5 animate-in fade-in duration-300 select-none">
       {/* ── Profile Header visual card ── */}
-      <div className="panel-silver rounded-2xl p-8 relative flex flex-col md:flex-row items-center gap-8 overflow-hidden select-none">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--silver-300)] to-transparent opacity-45" />
-
+      <div className="rounded-xl p-5 relative flex flex-col md:flex-row items-center gap-5 overflow-hidden select-none bg-[#141418] border border-white/[0.06]">
         <div className="relative group cursor-pointer shrink-0">
-          <div className="w-32 h-32 rounded-2xl flex items-center justify-center overflow-hidden border border-[var(--border-med)] bg-[var(--bg-elevated)] p-1.5 transition-all duration-300 group-hover:border-[var(--border-silver)] group-hover:shadow-[0_0_25px_var(--silver-glow)]">
-            <div className="w-full h-full rounded-xl overflow-hidden relative">
+          <div className="w-24 h-24 rounded-xl flex items-center justify-center overflow-hidden border border-white/[0.08] bg-[#1c1c22] p-1 transition-all duration-300 hover:border-zinc-500/40">
+            <div className="w-full h-full rounded-lg overflow-hidden relative">
               {profile.profile_picture ? (
                 <img
                   src={profile.profile_picture}
@@ -168,27 +166,27 @@ export const AdminProfilePage: React.FC = () => {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-[var(--bg-active)]">
-                  <User className="w-14 h-14 text-[var(--silver-500)]" />
+                <div className="w-full h-full flex items-center justify-center bg-black/40">
+                  <User className="w-10 h-10 text-zinc-400" />
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        <div className="text-center md:text-left space-y-2 flex-1">
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-            <h2 className="text-3xl font-black tracking-tight text-[var(--silver-100)]">
+        <div className="text-center md:text-left space-y-1.5 flex-1">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
+            <h2 className="text-2xl font-black tracking-tight text-zinc-100">
               {profile.name || "System Operator"}
             </h2>
-            <span className="text-[9px] font-black font-mono px-3 py-1 rounded bg-[var(--bg-active)] border border-[var(--border-soft)] text-[var(--silver-300)] uppercase tracking-wider">
+            <span className="text-[8.5px] font-black font-mono px-2.5 py-0.5 rounded bg-[#1c1c22] border border-white/[0.08] text-zinc-300 uppercase tracking-wider">
               {profile.role}
             </span>
           </div>
-          <p className="font-mono text-base text-[var(--silver-500)] lowercase">
+          <p className="font-mono text-sm text-zinc-400 lowercase">
             @{profile.username || "admin"}
           </p>
-          <p className="text-[10px] text-[var(--silver-600)] uppercase font-mono tracking-widest leading-relaxed max-w-lg mt-2">
+          <p className="text-[9.5px] text-zinc-400 uppercase font-mono tracking-wider leading-relaxed max-w-lg mt-1">
             Authorized node controller. Credentials secured & encrypted via Cloudflare D1 Auth Daemon.
           </p>
         </div>
@@ -197,10 +195,10 @@ export const AdminProfilePage: React.FC = () => {
       {/* ── Alert Notifications ── */}
       {message && (
         <div
-          className={`p-4 rounded-xl text-xs font-mono uppercase tracking-wider font-extrabold border animate-in zoom-in-95 duration-300 ${
+          className={`p-3.5 rounded-xl text-xs font-mono uppercase tracking-wider font-extrabold border animate-in zoom-in-95 duration-300 ${
             message.type === "success"
-              ? "bg-emerald-950/20 border-emerald-800/35 text-emerald-400"
-              : "bg-red-950/20 border-red-800/35 text-red-400"
+              ? "bg-white/[0.08] border-white/[0.18] text-zinc-100"
+              : "bg-white/[0.04] border-white/[0.1] text-zinc-400"
           }`}
         >
           {message.text}
@@ -208,28 +206,29 @@ export const AdminProfilePage: React.FC = () => {
       )}
 
       {/* ── Main Operations Grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* ── Left column: Stats ── */}
-        <div className="lg:col-span-4 space-y-6">
-          <section className="panel rounded-2xl p-6 flex flex-col gap-5">
-            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--silver-600)] font-mono flex items-center gap-2">
-              <Award className="w-3.5 h-3.5 text-[var(--silver-500)]" /> Profile Metrics
+        <div className="lg:col-span-4 space-y-4">
+          <section className="panel rounded-xl p-4.5 flex flex-col gap-4 bg-[#141418] border border-white/[0.06]">
+            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 font-mono flex items-center gap-2">
+              <Award className="w-3.5 h-3.5 text-zinc-300" /> Profile Metrics
             </h3>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {[
                 {
-                  label: "Authorized Since",
-                  value: new Date(profile.created_at).toLocaleDateString(
-                    "en-US",
-                    { month: "short", year: "numeric" }
-                  ),
+                  label: "Registered Since",
+                  value: profile.created_at
+                    ? new Date(profile.created_at).toLocaleDateString("id-ID", {
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "Belum Ada",
                   icon: Calendar,
                 },
                 {
-                  label: "Shield Status",
-                  value: "Active Integrity",
-                  highlight: true,
+                  label: "Account Role",
+                  value: profile.role ? profile.role.toUpperCase() : "ADMIN",
                   icon: Shield,
                 },
               ].map((item, idx) => {
@@ -237,39 +236,33 @@ export const AdminProfilePage: React.FC = () => {
                 return (
                   <div
                     key={idx}
-                    className="flex justify-between items-center p-3.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)]"
+                    className="flex justify-between items-center p-3 rounded-lg bg-[#1c1c22] border border-white/[0.06]"
                   >
-                    <span className="text-[9px] uppercase tracking-wider font-black text-[var(--silver-500)] font-mono flex items-center gap-1.5">
+                    <span className="text-[9px] uppercase tracking-wider font-black text-zinc-400 font-mono flex items-center gap-1.5">
                       <Icon className="w-3.5 h-3.5" /> {item.label}
                     </span>
-                    {item.highlight ? (
-                      <span className="text-emerald-400 flex items-center gap-1.5 text-[9px] font-mono font-black uppercase">
-                        <span className="dot-online animate-emerald-pulse" /> Encrypted
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-mono font-extrabold text-[var(--silver-200)]">
-                        {item.value}
-                      </span>
-                    )}
+                    <span className="text-[10px] font-mono font-extrabold text-zinc-100">
+                      {item.value}
+                    </span>
                   </div>
                 );
               })}
             </div>
           </section>
 
-          <section className="panel rounded-2xl p-6 flex flex-col gap-4">
-            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--silver-600)] font-mono flex items-center gap-2">
-              <Shield className="w-3.5 h-3.5 text-[var(--silver-500)]" /> Cryptographic Key
+          <section className="panel rounded-xl p-4.5 flex flex-col gap-3 bg-[#141418] border border-white/[0.06]">
+            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 font-mono flex items-center gap-2">
+              <Shield className="w-3.5 h-3.5 text-zinc-300" /> Account Security
             </h3>
-            <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] space-y-3 font-mono">
-              <div className="flex items-center gap-2 text-emerald-400">
-                <Check className="w-4 h-4" />
+            <div className="p-3.5 rounded-lg bg-[#1c1c22] border border-white/[0.06] space-y-2 font-mono">
+              <div className="flex items-center gap-2 text-zinc-200">
+                <Check className="w-3.5 h-3.5" />
                 <span className="text-[8.5px] font-black uppercase tracking-widest">
-                  Operator Validated
+                  Authenticated Session
                 </span>
               </div>
-              <p className="text-[10px] leading-relaxed text-[var(--silver-600)] uppercase">
-                Access tokens are cycled per operation. Session signature securely locked to gateway device.
+              <p className="text-[9.5px] leading-relaxed text-zinc-400 uppercase">
+                Email terverifikasi di Cloudflare D1. Kredensial diamankan dengan hashing server.
               </p>
             </div>
           </section>

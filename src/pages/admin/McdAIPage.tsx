@@ -501,7 +501,7 @@ export function McdAIPage() {
                     }}
                   >
                     <span>{topic}</span>
-                    <Zap className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500" />
+                    <Zap className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-zinc-300" />
                   </button>
                 ))}
               </div>

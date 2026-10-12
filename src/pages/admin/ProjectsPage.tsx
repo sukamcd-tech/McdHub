@@ -272,84 +272,36 @@ export const ProjectsPage: React.FC = () => {
                   el.style.boxShadow = "0 2px 12px rgba(0,0,0,0.4)";
                 }}
               >
-                <div
-                  className="absolute top-0 left-0 right-0 h-px"
-                  style={{
-                    background: `linear-gradient(90deg, transparent, ${
-                      project.status === "ONLINE"
-                        ? "rgba(16,185,129,0.5)"
-                        : project.status === "MAINTENANCE"
-                        ? "rgba(245,158,11,0.5)"
-                        : "rgba(239,68,68,0.3)"
-                    }, transparent)`,
-                  }}
-                />
-
-                <div className="p-7">
-                  <div className="flex items-start justify-between mb-4 select-none">
+                <div className="p-4.5">
+                  <div className="flex items-start justify-between mb-3 select-none">
                     <div>
-                      <span
-                        className="text-[8px] font-black uppercase tracking-widest font-mono px-2 py-0.5 rounded block mb-2 w-max"
-                        style={{
-                          background: "var(--bg-active)",
-                          border: "1px solid var(--border-soft)",
-                          color: "var(--silver-500)",
-                        }}
-                      >
+                      <span className="text-[8px] font-black uppercase tracking-widest font-mono px-2 py-0.5 rounded block mb-1.5 w-max bg-[#1c1c22] border border-white/[0.06] text-zinc-400">
                         {project.category}
                       </span>
-                      <h3
-                        className="text-base font-extrabold uppercase tracking-tight font-mono"
-                        style={{ color: "var(--silver-100)" }}
-                      >
+                      <h3 className="text-base font-extrabold uppercase tracking-tight font-mono text-zinc-100">
                         {project.title}
                       </h3>
                     </div>
 
-                    <div
-                      className={`p-2 rounded-xl border ${
-                        project.status === "ONLINE"
-                          ? "bg-emerald-900/10 border-emerald-800/25 text-emerald-400"
-                          : project.status === "MAINTENANCE"
-                          ? "bg-amber-900/10 border-amber-800/25 text-amber-400"
-                          : "bg-red-900/10 border-red-800/25 text-red-400"
-                      }`}
-                    >
+                    <div className="p-2 rounded-lg border bg-[#1c1c22] border-white/[0.08] text-zinc-300">
                       {project.status === "ONLINE" ? (
-                        <Globe className="w-4 h-4" />
+                        <Globe className="w-3.5 h-3.5" />
                       ) : project.status === "MAINTENANCE" ? (
-                        <AlertCircle className="w-4 h-4" />
+                        <AlertCircle className="w-3.5 h-3.5" />
                       ) : (
-                        <Lock className="w-4 h-4" />
+                        <Lock className="w-3.5 h-3.5" />
                       )}
                     </div>
                   </div>
 
-                  <p
-                    className="text-xs leading-relaxed line-clamp-2 min-h-[36px]"
-                    style={{ color: "var(--silver-600)" }}
-                  >
+                  <p className="text-xs leading-relaxed line-clamp-2 text-zinc-400">
                     {project.description || "No description for this node."}
                   </p>
 
-                  <div
-                    className="mt-6 pt-4 flex items-center justify-between select-none"
-                    style={{ borderTop: "1px solid var(--border-subtle)" }}
-                  >
+                  <div className="mt-4 pt-3 flex items-center justify-between select-none border-t border-white/[0.06]">
                     <div className="flex items-center gap-2">
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          project.status === "ONLINE"
-                            ? "bg-emerald-500"
-                            : project.status === "MAINTENANCE"
-                            ? "bg-amber-500"
-                            : "bg-red-500"
-                        }`}
-                      />
-                      <span
-                        className="text-[9px] font-black tracking-widest uppercase font-mono"
-                        style={{ color: "var(--silver-500)" }}
-                      >
+                      <span className="w-1.5 h-1.5 rounded-full bg-zinc-300" />
+                      <span className="text-[9px] font-black tracking-widest uppercase font-mono text-zinc-400">
                         {project.status}
                       </span>
                     </div>
