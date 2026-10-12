@@ -12,12 +12,17 @@
     "cf-typegen": "wrangler types --env-interface Bindings"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "framer-motion": "^14.1.0",
     "hono": "^4.13.13",
     "jose": "^6.2.12",
     "lucide-react": "^1.55.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.4"
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.18.4",
+    "remark-gfm": "^4.0.1",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261011.1",
