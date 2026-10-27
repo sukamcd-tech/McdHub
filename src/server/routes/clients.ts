@@ -63,6 +63,39 @@ async function ensureTables(db: D1Database) {
     )`
   );
 
+  await execute(
+    db,
+    `CREATE TABLE IF NOT EXISTS client_basts (
+      id TEXT PRIMARY KEY,
+      bast_number TEXT UNIQUE NOT NULL,
+      client_id TEXT,
+      task_id TEXT,
+      client_name TEXT NOT NULL,
+      client_company TEXT,
+      client_phone TEXT,
+      client_email TEXT,
+      project_title TEXT NOT NULL,
+      domain_primary TEXT,
+      domain_secondary TEXT,
+      domain_provider TEXT DEFAULT 'IDwebhost',
+      hosting_provider TEXT DEFAULT 'Cloudflare',
+      domain_expiry TEXT,
+      domain_cost_yearly TEXT,
+      invoice_ref TEXT,
+      email_project TEXT,
+      password_default TEXT,
+      server_infra TEXT DEFAULT 'Cloudflare Pages & D1 Engine',
+      cms_sheets TEXT,
+      search_console TEXT,
+      sitemap TEXT,
+      modules_json TEXT,
+      terms_json TEXT,
+      handover_date TEXT NOT NULL,
+      status TEXT DEFAULT 'completed',
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )`
+  );
+
   // Safe migrations for existing SQLite tables
   const safeAlter = async (sql: string) => {
     try {
@@ -527,6 +560,218 @@ clientsRoute.delete('/invoices/:id', requireAuth('admin'), async (c) => {
     return c.json({ success: true });
   } catch (error: any) {
     console.error('Delete invoice error:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// ──────────────────────────────────────────────
+// CLIENT BAST (BERITA ACARA SERAH TERIMA)
+// ──────────────────────────────────────────────
+
+// GET /api/clients/basts
+clientsRoute.get('/basts', requireAuth('admin'), async (c) => {
+  try {
+    await ensureTables(c.env.DB);
+    const basts = await query(
+      c.env.DB,
+      `SELECT * FROM client_basts ORDER BY created_at DESC`
+    );
+    return c.json({ success: true, basts: basts || [] });
+  } catch (error: any) {
+    console.error('Fetch BAST error:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// POST /api/clients/basts
+clientsRoute.post('/basts', requireAuth('admin'), async (c) => {
+  try {
+    await ensureTables(c.env.DB);
+    const body = await c.req.json();
+    const {
+      bast_number,
+      client_id,
+      task_id,
+      client_name,
+      client_company = '',
+      client_phone = '',
+      client_email = '',
+      project_title,
+      domain_primary = '',
+      domain_secondary = '',
+      domain_provider = 'IDwebhost',
+      hosting_provider = 'Cloudflare',
+      domain_expiry = '',
+      domain_cost_yearly = '',
+      invoice_ref = '',
+      email_project = '',
+      password_default = '',
+      server_infra = 'Cloudflare Pages & D1 Engine',
+      cms_sheets = '',
+      search_console = '',
+      sitemap = '',
+      modules = [],
+      terms = [],
+      handover_date = new Date().toISOString().split('T')[0],
+      status = 'completed',
+    } = body;
+
+    if (!client_name?.trim() || !project_title?.trim()) {
+      return c.json({ success: false, error: 'Nama klien dan nama sistem wajib diisi' }, 400);
+    }
+
+    const id = crypto.randomUUID();
+    const bastNum = bast_number?.trim() || `BAST-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
+
+    await execute(
+      c.env.DB,
+      `INSERT INTO client_basts (
+        id, bast_number, client_id, task_id, client_name, client_company,
+        client_phone, client_email, project_title, domain_primary, domain_secondary,
+        domain_provider, hosting_provider, domain_expiry, domain_cost_yearly,
+        invoice_ref, email_project, password_default, server_infra,
+        cms_sheets, search_console, sitemap, modules_json, terms_json, handover_date, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        bastNum,
+        client_id || null,
+        task_id || null,
+        client_name.trim(),
+        client_company.trim(),
+        client_phone.trim(),
+        client_email.trim(),
+        project_title.trim(),
+        domain_primary.trim(),
+        domain_secondary.trim(),
+        domain_provider.trim(),
+        hosting_provider.trim(),
+        domain_expiry.trim(),
+        domain_cost_yearly.trim(),
+        invoice_ref.trim(),
+        email_project.trim(),
+        password_default.trim(),
+        server_infra.trim(),
+        cms_sheets.trim(),
+        search_console.trim(),
+        sitemap.trim(),
+        JSON.stringify(modules || []),
+        JSON.stringify(terms || []),
+        handover_date,
+        status,
+      ]
+    );
+
+    const created = await queryOne(c.env.DB, 'SELECT * FROM client_basts WHERE id = ?', [id]);
+    return c.json({ success: true, bast: created });
+  } catch (error: any) {
+    console.error('Create BAST error:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// PUT /api/clients/basts/:id
+clientsRoute.put('/basts/:id', requireAuth('admin'), async (c) => {
+  try {
+    const id = c.req.param('id');
+    const body = await c.req.json();
+    const {
+      bast_number,
+      client_name,
+      client_company,
+      client_phone,
+      client_email,
+      project_title,
+      domain_primary,
+      domain_secondary,
+      domain_provider,
+      hosting_provider,
+      domain_expiry,
+      domain_cost_yearly,
+      invoice_ref,
+      email_project,
+      password_default,
+      server_infra,
+      cms_sheets,
+      search_console,
+      sitemap,
+      modules,
+      terms,
+      handover_date,
+      status,
+    } = body;
+
+    await execute(
+      c.env.DB,
+      `UPDATE client_basts
+       SET bast_number = COALESCE(?, bast_number),
+           client_name = COALESCE(?, client_name),
+           client_company = COALESCE(?, client_company),
+           client_phone = COALESCE(?, client_phone),
+           client_email = COALESCE(?, client_email),
+           project_title = COALESCE(?, project_title),
+           domain_primary = COALESCE(?, domain_primary),
+           domain_secondary = COALESCE(?, domain_secondary),
+           domain_provider = COALESCE(?, domain_provider),
+           hosting_provider = COALESCE(?, hosting_provider),
+           domain_expiry = COALESCE(?, domain_expiry),
+           domain_cost_yearly = COALESCE(?, domain_cost_yearly),
+           invoice_ref = COALESCE(?, invoice_ref),
+           email_project = COALESCE(?, email_project),
+           password_default = COALESCE(?, password_default),
+           server_infra = COALESCE(?, server_infra),
+           cms_sheets = COALESCE(?, cms_sheets),
+           search_console = COALESCE(?, search_console),
+           sitemap = COALESCE(?, sitemap),
+           modules_json = COALESCE(?, modules_json),
+           terms_json = COALESCE(?, terms_json),
+           handover_date = COALESCE(?, handover_date),
+           status = COALESCE(?, status)
+       WHERE id = ?`,
+      [
+        bast_number !== undefined ? bast_number : null,
+        client_name !== undefined ? client_name : null,
+        client_company !== undefined ? client_company : null,
+        client_phone !== undefined ? client_phone : null,
+        client_email !== undefined ? client_email : null,
+        project_title !== undefined ? project_title : null,
+        domain_primary !== undefined ? domain_primary : null,
+        domain_secondary !== undefined ? domain_secondary : null,
+        domain_provider !== undefined ? domain_provider : null,
+        hosting_provider !== undefined ? hosting_provider : null,
+        domain_expiry !== undefined ? domain_expiry : null,
+        domain_cost_yearly !== undefined ? domain_cost_yearly : null,
+        invoice_ref !== undefined ? invoice_ref : null,
+        email_project !== undefined ? email_project : null,
+        password_default !== undefined ? password_default : null,
+        server_infra !== undefined ? server_infra : null,
+        cms_sheets !== undefined ? cms_sheets : null,
+        search_console !== undefined ? search_console : null,
+        sitemap !== undefined ? sitemap : null,
+        modules !== undefined ? JSON.stringify(modules) : null,
+        terms !== undefined ? JSON.stringify(terms) : null,
+        handover_date !== undefined ? handover_date : null,
+        status !== undefined ? status : null,
+        id,
+      ]
+    );
+
+    const updated = await queryOne(c.env.DB, 'SELECT * FROM client_basts WHERE id = ?', [id]);
+    return c.json({ success: true, bast: updated });
+  } catch (error: any) {
+    console.error('Update BAST error:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// DELETE /api/clients/basts/:id
+clientsRoute.delete('/basts/:id', requireAuth('admin'), async (c) => {
+  try {
+    const id = c.req.param('id');
+    await execute(c.env.DB, 'DELETE FROM client_basts WHERE id = ?', [id]);
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Delete BAST error:', error);
     return c.json({ success: false, error: error.message }, 500);
   }
 });

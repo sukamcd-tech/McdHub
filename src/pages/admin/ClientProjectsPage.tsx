@@ -24,7 +24,13 @@ import {
   ChevronDown,
   ChevronUp,
   Eye,
+  FileCheck,
+  Sparkles,
 } from "lucide-react";
+import { BastModal } from "../../components/admin/BastModal";
+import { BastPreviewModal } from "../../components/admin/BastPreviewModal";
+import type { BastData } from "../../lib/bastPrintHelper";
+import { DEFAULT_BAST_PRESET, printBast } from "../../lib/bastPrintHelper";
 
 interface ClientContact {
   id: string;
@@ -89,12 +95,13 @@ interface ClientInvoice {
 }
 
 export const ClientProjectsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"kanban" | "clients" | "invoices">("kanban");
+  const [activeTab, setActiveTab] = useState<"kanban" | "clients" | "invoices" | "basts">("kanban");
   
   // Data States
   const [clients, setClients] = useState<ClientContact[]>([]);
   const [tasks, setTasks] = useState<ClientTask[]>([]);
   const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
+  const [basts, setBasts] = useState<BastData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Filters
@@ -112,6 +119,10 @@ export const ClientProjectsPage: React.FC = () => {
 
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [viewingInvoice, setViewingInvoice] = useState<ClientInvoice | null>(null);
+
+  const [isBastModalOpen, setIsBastModalOpen] = useState(false);
+  const [viewingBast, setViewingBast] = useState<BastData | null>(null);
+  const [editingBast, setEditingBast] = useState<BastData | null>(null);
 
   // Form states
   const [taskForm, setTaskForm] = useState({
@@ -161,10 +172,11 @@ export const ClientProjectsPage: React.FC = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [clientsRes, tasksRes, invRes] = await Promise.all([
+      const [clientsRes, tasksRes, invRes, bastRes] = await Promise.all([
         fetch("/api/clients").then((r) => r.json() as Promise<any>).catch(() => null),
         fetch("/api/clients/tasks").then((r) => r.json() as Promise<any>).catch(() => null),
         fetch("/api/clients/invoices").then((r) => r.json() as Promise<any>).catch(() => null),
+        fetch("/api/clients/basts").then((r) => r.json() as Promise<any>).catch(() => null),
       ]);
 
       if (clientsRes?.success && Array.isArray(clientsRes.clients)) {
@@ -175,6 +187,15 @@ export const ClientProjectsPage: React.FC = () => {
       }
       if (invRes?.success && Array.isArray(invRes.invoices)) {
         setInvoices(invRes.invoices);
+      }
+      if (bastRes?.success && Array.isArray(bastRes.basts)) {
+        setBasts(
+          bastRes.basts.map((b: any) => ({
+            ...b,
+            modules: typeof b.modules_json === "string" ? JSON.parse(b.modules_json || "[]") : (b.modules || []),
+            terms: typeof b.terms_json === "string" ? JSON.parse(b.terms_json || "[]") : (b.terms || []),
+          }))
+        );
       }
     } catch (err) {
       console.error("Error fetching client data:", err);
@@ -797,6 +818,96 @@ export const ClientProjectsPage: React.FC = () => {
   };
 
   // ──────────────────────────────────────────────
+  // BAST ACTIONS
+  // ──────────────────────────────────────────────
+  const openNewBastModal = (preset?: Partial<BastData>) => {
+    const bastNum = `BAST-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
+    const todayFormatted = new Date().toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
+    setEditingBast({
+      ...DEFAULT_BAST_PRESET,
+      bast_number: bastNum,
+      handover_date: todayFormatted,
+      client_id: selectedClientId !== "all" ? selectedClientId : undefined,
+      ...preset,
+    });
+    setIsBastModalOpen(true);
+  };
+
+  const openBastForTask = (task: ClientTask) => {
+    const relatedClient = clients.find((c) => c.id === task.client_id);
+    const relatedInvoice = invoices.find(
+      (inv) => inv.task_id === task.id || (task.client_id && inv.client_id === task.client_id)
+    );
+    const invRef = relatedInvoice
+      ? `${relatedInvoice.invoice_number} (${relatedInvoice.status === "paid" ? "Lunas" : "Terbit"})`
+      : "INV-2026-2030 (Lunas)";
+
+    const bastNum = `BAST-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
+    const todayFormatted = new Date().toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
+    setEditingBast({
+      ...DEFAULT_BAST_PRESET,
+      bast_number: bastNum,
+      handover_date: todayFormatted,
+      client_id: task.client_id,
+      task_id: task.id,
+      client_name: task.client_name || relatedClient?.name || "Klien Umum",
+      client_company: task.client_company || relatedClient?.company || "",
+      client_phone: relatedClient?.phone || "",
+      client_email: relatedClient?.email || "",
+      project_title: task.title,
+      domain_primary: task.domain_name || "https://sute.web.id",
+      invoice_ref: invRef,
+      domain_cost_yearly: task.domain_price ? `${formatIDR(task.domain_price)} per tahun` : "Rp60.939 per tahun",
+    });
+    setIsBastModalOpen(true);
+  };
+
+  const handleSaveBast = async (bastData: BastData, printImmediately = false) => {
+    const method = bastData.id ? "PUT" : "POST";
+    const url = bastData.id ? `/api/clients/basts/${bastData.id}` : "/api/clients/basts";
+
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bastData),
+    });
+
+    const data = (await res.json()) as any;
+    if (data.success) {
+      await fetchData();
+      if (printImmediately) {
+        printBast(bastData);
+      }
+    } else {
+      throw new Error(data.error || "Gagal menyimpan BAST");
+    }
+  };
+
+  const handleDeleteBast = async (bastId: string) => {
+    if (!confirm("Hapus dokumen BAST ini?")) return;
+    try {
+      await fetch(`/api/clients/basts/${bastId}`, { method: "DELETE" });
+      setBasts((prev) => prev.filter((b) => b.id !== bastId));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handlePrintBast = (bast: BastData) => {
+    printBast(bast);
+  };
+
+  // ──────────────────────────────────────────────
   // CALCULATED METRICS & FILTERING BY CLIENT
   // ──────────────────────────────────────────────
   const filteredTasksByClient = selectedClientId === "all"
@@ -806,6 +917,10 @@ export const ClientProjectsPage: React.FC = () => {
   const filteredInvoicesByClient = selectedClientId === "all"
     ? invoices
     : invoices.filter((i) => i.client_id === selectedClientId);
+
+  const filteredBastsByClient = selectedClientId === "all"
+    ? basts
+    : basts.filter((b) => b.client_id === selectedClientId);
 
   const totalTasks = filteredTasksByClient.length;
   const inProgressTasks = filteredTasksByClient.filter((t) => t.status === "in_progress").length;
@@ -881,6 +996,16 @@ export const ClientProjectsPage: React.FC = () => {
               Buat Invoice
             </button>
           )}
+
+          {activeTab === "basts" && (
+            <button
+              onClick={() => openNewBastModal()}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-mono font-black uppercase text-[9.5px] tracking-widest bg-zinc-200 text-black border border-zinc-300 hover:bg-white cursor-pointer transition-all active:scale-[0.98]"
+            >
+              <FileCheck className="w-3.5 h-3.5 stroke-[3]" />
+              Buat Dokumen BAST
+            </button>
+          )}
         </div>
       </div>
 
@@ -917,6 +1042,16 @@ export const ClientProjectsPage: React.FC = () => {
             }`}
           >
             Invoices & Billing <span className="text-[9px] opacity-70">({filteredInvoicesByClient.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("basts")}
+            className={`h-7 px-3 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "basts"
+                ? "bg-[#1c1c22] text-zinc-100 border border-white/[0.1] shadow-sm"
+                : "text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            Berita Acara (BAST) <span className="text-[9px] opacity-70">({filteredBastsByClient.length})</span>
           </button>
         </div>
 
@@ -1325,6 +1460,16 @@ export const ClientProjectsPage: React.FC = () => {
                                   Handover & Garansi
                                 </button>
                               )}
+                              {(step === 4 || task.credentials_handed_over || task.status === "done" || step === 3) && (
+                                <button
+                                  onClick={() => openBastForTask(task)}
+                                  className="flex-1 py-1 px-2 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/20 text-[8.5px] font-mono uppercase tracking-wider flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
+                                  title="Buat / Cetak Berita Acara Serah Terima (BAST)"
+                                >
+                                  <FileCheck className="w-2.5 h-2.5" />
+                                  + Dok BAST
+                                </button>
+                              )}
                             </div>
 
                             {/* Quick Move Status / Actions */}
@@ -1705,6 +1850,201 @@ export const ClientProjectsPage: React.FC = () => {
                     <tr>
                       <td colSpan={6} className="py-12 text-center text-zinc-500 uppercase tracking-widest text-[9.5px]">
                         {selectedClientId !== "all" ? "Belum ada invoice untuk klien ini" : "Belum ada invoice dibuat"}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 4: BERITA ACARA SERAH TERIMA (BAST) ── */}
+      {activeTab === "basts" && (
+        <div className="space-y-4">
+          {/* Quick Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {[
+              { label: "Dokumen BAST Terbit", value: filteredBastsByClient.length, icon: FileCheck },
+              {
+                label: "Handover Selesai",
+                value: filteredBastsByClient.filter((b) => b.status === "completed" || !b.status).length,
+                icon: CheckCircle2,
+              },
+              {
+                label: "Domain Aktif Terdata",
+                value: filteredBastsByClient.filter((b) => b.domain_primary).length,
+                icon: Globe,
+              },
+            ].map((st, i) => {
+              const Icon = st.icon;
+              return (
+                <div
+                  key={i}
+                  className="p-3.5 rounded-xl bg-[#141418] border border-white/[0.06] flex items-center justify-between"
+                >
+                  <div>
+                    <p className="text-[8.5px] uppercase font-mono font-black tracking-widest text-zinc-400">
+                      {st.label}
+                    </p>
+                    <p className="text-base sm:text-lg font-black font-mono text-zinc-100 mt-0.5">
+                      {st.value} Dokumen
+                    </p>
+                  </div>
+                  <div className="p-2 rounded-lg bg-[#1c1c22] border border-white/[0.06] text-zinc-400">
+                    <Icon className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Quick Action Preset Banner */}
+          <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 via-[#141418] to-[#141418] border border-emerald-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shrink-0">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-wider flex items-center gap-2">
+                  <span>Template Instan BAST: Eman Jamaludin (Warkop Sudut Temu)</span>
+                  <span className="px-2 py-0.5 rounded text-[8.5px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Siap Pakai
+                  </span>
+                </h4>
+                <p className="text-[10px] font-mono text-zinc-400 mt-0.5">
+                  Lengkap dengan 5 modul kerja (thermal APK, kas operasional, stok WA), domain IDwebhost &amp; kredensial Google / Cloudflare.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setEditingBast({
+                  ...DEFAULT_BAST_PRESET,
+                  bast_number: `BAST-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`,
+                  handover_date: new Date().toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  }),
+                });
+                setIsBastModalOpen(true);
+              }}
+              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-mono font-bold uppercase tracking-wider shrink-0 cursor-pointer shadow transition-all active:scale-95 flex items-center justify-center gap-1.5"
+            >
+              <FileCheck className="w-3.5 h-3.5" />
+              Buka / Cetak Preset Ini
+            </button>
+          </div>
+
+          {/* BAST List Table */}
+          <div className="rounded-xl bg-[#141418] border border-white/[0.06] overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs font-mono">
+                <thead>
+                  <tr className="border-b border-white/[0.06] bg-black/20 text-[9px] uppercase tracking-widest text-zinc-400">
+                    <th className="py-3 px-4">No. BAST</th>
+                    <th className="py-3 px-4">Pihak Penerima (Klien)</th>
+                    <th className="py-3 px-4">Proyek &amp; Domain</th>
+                    <th className="py-3 px-4">Akun Proyek</th>
+                    <th className="py-3 px-4 text-center">Status</th>
+                    <th className="py-3 px-4 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.04]">
+                  {filteredBastsByClient
+                    .filter((b) => {
+                      if (!searchQuery) return true;
+                      const q = searchQuery.toLowerCase();
+                      return (
+                        b.bast_number.toLowerCase().includes(q) ||
+                        b.client_name.toLowerCase().includes(q) ||
+                        (b.client_company && b.client_company.toLowerCase().includes(q)) ||
+                        b.project_title.toLowerCase().includes(q) ||
+                        b.domain_primary.toLowerCase().includes(q)
+                      );
+                    })
+                    .map((b) => (
+                      <tr key={b.id || b.bast_number} className="hover:bg-white/[0.02] transition-colors">
+                        <td className="py-3 px-4 font-bold text-zinc-100">
+                          <div>{b.bast_number}</div>
+                          <div className="text-[10px] text-zinc-500 font-normal">{b.handover_date}</div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <p className="font-bold text-zinc-200">{b.client_name}</p>
+                          <p className="text-[10px] text-zinc-400">
+                            {b.client_company ? `${b.client_company} • ` : ""}
+                            {b.client_phone || "-"}
+                          </p>
+                        </td>
+                        <td className="py-3 px-4">
+                          <p className="font-bold text-zinc-200">{b.project_title}</p>
+                          <p className="text-[10px] text-blue-400 truncate max-w-[200px]">
+                            {b.domain_primary}
+                          </p>
+                        </td>
+                        <td className="py-3 px-4 text-zinc-400 text-[10px]">
+                          <p className="text-zinc-200 font-semibold">{b.email_project || "-"}</p>
+                          <p className="text-zinc-500">{b.server_infra || "Cloudflare Pages"}</p>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className="inline-block px-2.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            {b.status_badge || "SELESAI"}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => handlePrintBast(b)}
+                              className="px-2.5 py-1 rounded bg-[#1c1c22] border border-white/[0.08] text-[9px] font-mono uppercase tracking-wider text-emerald-300 hover:text-emerald-200 cursor-pointer flex items-center gap-1"
+                              title="Langsung Cetak / Simpan PDF (A4)"
+                            >
+                              <Printer className="w-3 h-3" />
+                              Cetak PDF
+                            </button>
+                            <button
+                              onClick={() => setViewingBast(b)}
+                              className="p-1.5 rounded bg-[#1c1c22] border border-white/[0.06] text-zinc-400 hover:text-zinc-200 cursor-pointer"
+                              title="Lihat Pratinjau Dokumen BAST"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingBast(b);
+                                setIsBastModalOpen(true);
+                              }}
+                              className="p-1.5 rounded bg-[#1c1c22] border border-white/[0.06] text-zinc-400 hover:text-zinc-200 cursor-pointer"
+                              title="Edit Data BAST"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            {b.id && (
+                              <button
+                                onClick={() => handleDeleteBast(b.id!)}
+                                className="p-1.5 rounded bg-[#1c1c22] border border-white/[0.06] text-zinc-400 hover:text-red-400 cursor-pointer"
+                                title="Hapus Dokumen"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  {filteredBastsByClient.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-zinc-500 uppercase tracking-widest text-[9.5px]">
+                        <p>Belum ada dokumen BAST diterbitkan</p>
+                        <button
+                          onClick={() => openNewBastModal()}
+                          className="mt-3 px-3 py-1.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.14] text-zinc-200 text-xs font-mono font-bold uppercase tracking-wider inline-flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          Buat BAST Pertama
+                        </button>
                       </td>
                     </tr>
                   )}
@@ -2825,6 +3165,32 @@ export const ClientProjectsPage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ────────────────────────────────────────────── */}
+      {/* MODAL 5: BAST GENERATOR & EDITOR */}
+      {/* ────────────────────────────────────────────── */}
+      <BastModal
+        isOpen={isBastModalOpen}
+        onClose={() => {
+          setIsBastModalOpen(false);
+          setEditingBast(null);
+        }}
+        onSave={handleSaveBast}
+        onPreview={(b) => setViewingBast(b)}
+        initialData={editingBast}
+        clients={clients}
+        tasks={tasks}
+      />
+
+      {/* ────────────────────────────────────────────── */}
+      {/* MODAL 6: BAST 1:1 VISUAL PREVIEW & PRINT */}
+      {/* ────────────────────────────────────────────── */}
+      {viewingBast && (
+        <BastPreviewModal
+          bast={viewingBast}
+          onClose={() => setViewingBast(null)}
+        />
       )}
     </div>
   );
